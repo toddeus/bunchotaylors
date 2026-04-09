@@ -146,9 +146,8 @@ function addPhoto(post, item) {
 			</a>
 		</div>
 		`;
-	$('.thegrid').append(html).masonry('appended', html);
-}	
-
+	$('.thegrid').append(html);
+}
 
 function addVideo(post) {	
 	var urlThumb = _config.s3.url + post.dir + '/' + post.thumb;
@@ -170,9 +169,9 @@ function addVideo(post) {
 		</div>
 		`;
 	
-	$('.thegrid').append(html).masonry('appended', html);
+	$('.thegrid').append(html);
 }
-	
+
 function getFormattedDate(date) {
 	var monthNames = ["January", "February", "March", "April", "May", "June",
 		  "July", "August", "September", "October", "November", "December"];
@@ -194,21 +193,17 @@ function checkOffset(offset, total) {
 }	
         
 function formatGrid() {
-	console.log('Images loaded, formatting the grid....');
-	
 	$('.thegrid').masonry({
 		itemSelector: '.grid-item',
-		columnWidth: '.grid-item'
+		columnWidth: '.grid-item',
+		percentPosition: true
 	});
-		
-	$('.thegrid').imagesLoaded( function() {
-		$('.thegrid').masonry('reloadItems');	
-		$('.thegrid').masonry();
-	})
-  	.done(function() {
-    	removeSpinner();
-    	Fancybox.bind('[data-fancybox]');
-  	});
+
+	$('.thegrid').imagesLoaded().done(function() {
+		$('.thegrid').masonry('reloadItems').masonry('layout');
+		removeSpinner();
+		Fancybox.bind('[data-fancybox]');
+	});
 }
 
 function removeSpinner() {
