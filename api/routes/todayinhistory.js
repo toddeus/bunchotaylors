@@ -1,5 +1,4 @@
 import { queryByMonthDay } from '../lib/db.js';
-import { listPhotoItems } from '../lib/s3.js';
 
 const PAGE_SIZE = 10;
 
@@ -20,21 +19,10 @@ function getTodayMonthDay() {
 }
 
 /**
- * Populate post.items from S3 for photo posts (non-video).
- * @param {object} post
- * @returns {Promise<object>}
- */
-async function populateItems(post) {
-  if (!post.video) {
-    post.items = await listPhotoItems(post.dir);
-  }
-  return post;
-}
-
-/**
  * GET /bot/todayinhistory?month&day&offset
  * Returns posts from this month+day across all years, ascending by date.
  * Defaults to today in America/New_York if month/day not provided.
+ * post.items is stored in DynamoDB and requires no S3 population at read time.
  */
 export async function handler(queryParams) {
   const offset = parseInt(queryParams.offset || '0', 10);
@@ -48,16 +36,12 @@ export async function handler(queryParams) {
     monthday = getTodayMonthDay();
   }
 
-  // queryByMonthDay returns results ascending by postdate
   const allItems = await queryByMonthDay(monthday);
-
-  const page = allItems.slice(offset, offset + PAGE_SIZE);
-  const populated = await Promise.all(page.map(populateItems));
 
   return {
     total: allItems.length,
     offset,
     tag: null,
-    posts: populated,
+    posts: allItems.slice(offset, offset + PAGE_SIZE),
   };
 }

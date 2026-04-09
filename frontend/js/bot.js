@@ -80,20 +80,30 @@ function getPost(id) {
 	Auth.apiFetch(endpoint).then(function (json) {
 		console.log(json);
 	
-		$('.thegrid').removeClass('row-cols-md-2');
-		$('.thegrid').removeClass('row-cols-xxl-4');		
-		
-		$.each(json.posts, function(post) {				
+		$("#anchornext").addClass("d-none");
+
+		var post = json.posts[0];
+		var isSingle = post && (post.video || post.items.length === 1);
+
+		if (isSingle) {
+			$('.thegrid').removeClass('row-cols-1 row-cols-md-2 row-cols-xxl-4');
+			$('.thegrid').addClass('justify-content-center');
+			$('.thegrid').css({ 'max-width': '600px', 'max-height': '800px' });
+		} else {
+			$('.thegrid').removeClass('row-cols-xxl-4');
+		}
+
+		$.each(json.posts, function(i, post) {
 			if (post.video)
 				addVideo(post);
 			else {
-				$.each(post.items, function(item) {
-					addPhoto(post,item);    					
-				});	
-			}		
-		});		
-		
-    	formatGrid();	
+				$.each(post.items, function(i, item) {
+					addPhoto(post,item);
+				});
+			}
+		});
+
+    	formatGrid();
 	}).catch(function (err) {
       console.error('API error:', err);
       showError('getPost', err);
@@ -106,24 +116,24 @@ function searchPosts(searchterm, offset) {
 	
 	if (offset) endpoint += '?offset=' + offset;
 	
-	console.log('Calling ' + endpoint);
+	console.log('Calling search ' + endpoint);
 	
 	Auth.apiFetch(endpoint).then(function (json) {
 		console.log(json);
 		
 		checkOffset(json.offset, json.total);
 		
-		$.each(json.posts, function(post) {				
+		$.each(json.posts, function(i, post) {
 			if (post.video)
 				addVideo(post);
 			else {
-				$.each(post.items, function(item) {
-					addPhoto(post,item);    					
-				});	
-			}	   						
-		});		
-    
-    	formatGrid();	
+				$.each(post.items, function(i, item) {
+					addPhoto(post,item);
+				});
+			}
+		});
+
+    	formatGrid();
 	}).catch(function (err) {
       console.error('API error:', err);
       showError('searchPosts', err);
@@ -133,6 +143,7 @@ function searchPosts(searchterm, offset) {
 
 function addPhoto(post, item) {	
 	var url = _config.s3.url + post.dir + '/' + item;
+	
 	var postDate = getFormattedDate(post.postdate);
 		
 	var html= 

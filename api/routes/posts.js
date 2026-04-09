@@ -1,5 +1,4 @@
 import { scanAll, queryByDate } from '../lib/db.js';
-import { listPhotoItems } from '../lib/s3.js';
 
 const PAGE_SIZE = 10;
 const VIDEO_PAGE_SIZE = 20;
@@ -16,25 +15,14 @@ function shuffle(arr) {
 }
 
 /**
- * Populate post.items from S3 for photo posts (non-video).
- * Video posts use thumb instead.
- * @param {object} post
- * @returns {Promise<object>}
- */
-async function populateItems(post) {
-  if (!post.video) {
-    post.items = await listPhotoItems(post.dir);
-  }
-  return post;
-}
-
-/**
  * GET /bot/posts
  * Handles three modes:
- *   - random=true: 10 random posts (all types), with items populated for photo posts
- *   - tag=video: 20 random video posts (no item population)
- *   - tag={other}: paginated posts filtered by tag, items populated for photo posts
- *   - default: paginated posts by date descending, items populated for photo posts
+ *   - random=true: 10 random posts (all types)
+ *   - tag=video: 20 random video posts
+ *   - tag={other}: paginated posts filtered by tag
+ *   - default: paginated posts by date descending
+ *
+ * post.items is stored in DynamoDB and requires no S3 population at read time.
  */
 export async function handler(queryParams) {
   const offset = parseInt(queryParams.offset || '0', 10);
@@ -45,13 +33,11 @@ export async function handler(queryParams) {
   if (random) {
     const allItems = await scanAll();
     shuffle(allItems);
-    const page = allItems.slice(0, PAGE_SIZE);
-    const populated = await Promise.all(page.map(populateItems));
     return {
       total: allItems.length,
       offset: 0,
       tag: null,
-      posts: populated,
+      posts: allItems.slice(0, PAGE_SIZE),
     };
   }
 
@@ -62,13 +48,11 @@ export async function handler(queryParams) {
       (item) => item.video && typeof item.video === 'string' && item.video.trim() !== ''
     );
     shuffle(videoItems);
-    const page = videoItems.slice(0, VIDEO_PAGE_SIZE);
-    // No item population for video posts — they use thumb
     return {
       total: videoItems.length,
       offset: 0,
       tag: 'video',
-      posts: page,
+      posts: videoItems.slice(0, VIDEO_PAGE_SIZE),
     };
   }
 
@@ -83,24 +67,20 @@ export async function handler(queryParams) {
         (item.tag3 && item.tag3.toLowerCase() === tagLower)
       );
     });
-    const page = filtered.slice(offset, offset + PAGE_SIZE);
-    const populated = await Promise.all(page.map(populateItems));
     return {
       total: filtered.length,
       offset,
       tag,
-      posts: populated,
+      posts: filtered.slice(offset, offset + PAGE_SIZE),
     };
   }
 
   // Mode 4: default — all posts by date descending, paginated
   const allItems = await queryByDate(false);
-  const page = allItems.slice(offset, offset + PAGE_SIZE);
-  const populated = await Promise.all(page.map(populateItems));
   return {
     total: allItems.length,
     offset,
     tag: null,
-    posts: populated,
+    posts: allItems.slice(offset, offset + PAGE_SIZE),
   };
 }

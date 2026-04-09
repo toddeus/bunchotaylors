@@ -9,7 +9,8 @@
       "Bash(python:*)",
       "Bash(node -e ':*)",
       "Bash(cmd:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(npm install:*)"
     ]
   }
 }

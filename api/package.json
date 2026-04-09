@@ -2,10 +2,19 @@
   "name": "bunch-o-taylors-api",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "migrate:dry": "cross-env DYNAMODB_TABLE=bot-posts S3_BUCKET=bunch-o-taylors DRY_RUN=true node scripts/migrate-items.js",
+    "migrate": "cross-env DYNAMODB_TABLE=bot-posts S3_BUCKET=bunch-o-taylors node scripts/migrate-items.js",
+    "audit:s3": "cross-env DYNAMODB_TABLE=bot-posts S3_BUCKET=bunch-o-taylors node scripts/audit-s3-orphans.js"
+  },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.600.0",
-    "@aws-sdk/lib-dynamodb": "^3.600.0",
     "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0",
     "aws-jwt-verify": "^4.0.1"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
   }
 }
