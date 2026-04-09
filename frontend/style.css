@@ -25,6 +25,29 @@ h2 > a {
 .footer .row {
 	height: 75px;
 }
+.footer-nav-col {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.footer-nav-col a {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: rgba(255,255,255,0.3);
+	color: #fff;
+	text-decoration: none;
+	font-size: 1.6rem;
+	line-height: 1;
+	border: 2px solid rgba(255,255,255,0.5);
+	transition: background 0.15s;
+}
+.footer-nav-col a:hover {
+	background: rgba(255,255,255,0.5);
+}
 .gallery-overlay {
     position: absolute; 
     bottom: 0; 
