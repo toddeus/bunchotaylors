@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Bunch-o-Taylors API
+
+Parameters:
+  CognitoUserPoolId:
+    Type: String
+    Description: Cognito User Pool ID for JWT verification
+
+  CognitoClientId:
+    Type: String
+    Description: Cognito User Pool Client ID for JWT verification
+
+Globals:
+  Function:
+    Runtime: nodejs24.x
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        DYNAMODB_TABLE: bot-posts
+        S3_BUCKET: bunch-o-taylors
+        S3_URL: !Sub 'https://bunch-o-taylors.s3.amazonaws.com'
+        COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
+        COGNITO_CLIENT_ID: !Ref CognitoClientId
+
+Resources:
+
+  # HTTP API with CORS
+  BotHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Description: Bunch-o-Taylors HTTP API
+
+
+  # Lambda function
+  BotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: bunch-o-taylors-api
+      Handler: index.handler
+      CodeUri: ../api/
+      Description: Bunch-o-Taylors gallery API handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: bot-posts
+        - S3ReadPolicy:
+            BucketName: bunch-o-taylors
+      Events:
+        ProxyRoute:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BotHttpApi
+            Path: /{proxy+}
+            Method: ANY
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2022
+        Format: esm
+        OutExtension:
+          - .js=.mjs
+        EntryPoints:
+          - index.js
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
+
+Outputs:
+  RawApiUrl:
+    Description: Raw API Gateway URL (usable before custom domain mapping is live)
+    Value: !Sub 'https://${BotHttpApi}.execute-api.${AWS::Region}.amazonaws.com'

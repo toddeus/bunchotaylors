@@ -1,0 +1,14 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "bunch-o-taylors-api"
+resolve_s3 = true
+s3_prefix = "bunch-o-taylors-api"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+parameter_overrides = "CognitoUserPoolId=\"us-east-1_F1f5MVHZp\" CognitoClientId=\"5n04ooefut2ig99c53me8l0qeq\""
+image_repositories = []
+
+[default.global.parameters]
+region = "us-east-1"

@@ -1,0 +1,18 @@
+{
+  "short_name": "BoT",
+  "name": "Bunch-o-Taylors",
+  "description": "Its taylorrific'",
+  "start_url": "/index.html?nav=memories",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e88e5",
+  "icons": [
+    {
+      "src": "app-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "portrait",
+  "scope": "/"
+}

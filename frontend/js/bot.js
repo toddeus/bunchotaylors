@@ -1,0 +1,235 @@
+function wait(ms) {
+    var defer = $.Deferred();
+    setTimeout(function() { defer.resolve(); }, ms);
+    return defer;
+}
+
+function getTags() {
+	Auth.apiFetch('bot/tags').then(function (json) {
+		updateMenu(json);
+	}).catch(function(err) {
+		console.error('getTags error:', err);
+		showError('getTags', err);
+	}).finally(function() {
+		removeSpinner();
+	});
+}
+
+function updateMenu(tags) {
+	var html = '';
+	for (var tag of tags) {
+		html += '<h2 class="d-flex justify-content-center"><a href="index.html?nav=posts&tag='+ tag + '">'+ tag + '</a></h2>';
+	}
+	html += '<h2 class="d-flex justify-content-center mt-4"><a href="#" onclick="Auth.signOut();return false;">sign out</a></h2>';
+
+	$('#menu h2:last').after(html);
+}    
+
+function getPosts(nav, tag, offset, month, day) {
+	var endpoint = 'bot/posts?random=true';
+	
+	if (nav == 'posts') 
+		endpoint = 'bot/posts?';
+	else if (nav == 'memories') 
+		endpoint = 'bot/todayinhistory?';
+			
+	if (tag) endpoint += 'tag=' + tag + '&';		
+	if (offset) endpoint += 'offset=' + offset + '&';
+	if (month) endpoint += 'month=' + month + '&';
+	if (day) endpoint += 'day=' + day + '&';
+
+	if (endpoint[endpoint.length - 1] === "&" || endpoint[endpoint.length - 1] === "?")
+		endpoint = endpoint.substring(0, endpoint.length-1);	
+	
+	console.log('Calling ' + endpoint);
+	
+	Auth.apiFetch(endpoint).then(function (json) {
+		console.log(json);
+	
+		checkOffset(json.offset, json.total);
+		
+		if (json.posts.length == 0) {			
+			$('#nomemories').removeClass('d-none');
+			getPosts('', '', '');
+		}
+		else {			
+			$.each(json.posts, function(i, post) {							
+				if (post.video)
+					addVideo(post);					
+				else{
+					$.each(post.items, function(i, item) {						
+						addPhoto(post,item);    					
+					});
+				}		   						
+			});			
+		}
+				
+        formatGrid(); 
+               
+	}).catch(function (err) {
+      console.error('API error:', err);
+      showError('getPosts', err);
+      removeSpinner();
+    });
+}
+
+function getPost(id) {
+	var endpoint= 'bot/posts/' + id;	
+	console.log('Calling ' + endpoint);
+	
+	Auth.apiFetch(endpoint).then(function (json) {
+		console.log(json);
+	
+		$('.thegrid').removeClass('row-cols-md-2');
+		$('.thegrid').removeClass('row-cols-xxl-4');		
+		
+		$.each(json.posts, function(post) {				
+			if (post.video)
+				addVideo(post);
+			else {
+				$.each(post.items, function(item) {
+					addPhoto(post,item);    					
+				});	
+			}		
+		});		
+		
+    	formatGrid();	
+	}).catch(function (err) {
+      console.error('API error:', err);
+      showError('getPost', err);
+      removeSpinner();
+    });
+}
+
+function searchPosts(searchterm, offset) {
+	var endpoint= 'bot/search/' + searchterm;
+	
+	if (offset) endpoint += '?offset=' + offset;
+	
+	console.log('Calling ' + endpoint);
+	
+	Auth.apiFetch(endpoint).then(function (json) {
+		console.log(json);
+		
+		checkOffset(json.offset, json.total);
+		
+		$.each(json.posts, function(post) {				
+			if (post.video)
+				addVideo(post);
+			else {
+				$.each(post.items, function(item) {
+					addPhoto(post,item);    					
+				});	
+			}	   						
+		});		
+    
+    	formatGrid();	
+	}).catch(function (err) {
+      console.error('API error:', err);
+      showError('searchPosts', err);
+      removeSpinner();
+    });
+}
+
+function addPhoto(post, item) {	
+	var url = _config.s3.url + post.dir + '/' + item;
+	var postDate = getFormattedDate(post.postdate);
+		
+	var html= 
+		`<div class="grid-item col p-1 card border-0">
+			<a data-fancybox="gallery" data-caption="${post.title} ${postDate}"  href="${url}" data-post="${post.id}">
+				<img class="img-fluid rounded card-img" src="${url}" alt="" title=""/>			
+				<div class="gallery-overlay rounded">
+					<div class="overlay-title">${post.title}</div>
+					<div class="overlay-date">${postDate}</div>		
+				</div>
+			</a>
+		</div>
+		`;
+	$('.thegrid').append(html).masonry('appended', html);
+}	
+
+
+function addVideo(post) {	
+	var urlThumb = _config.s3.url + post.dir + '/' + post.thumb;
+	var urlVideo = _config.s3.url + post.video;
+	var postDate = getFormattedDate(post.postdate);
+	
+	var html = 	
+		`<div class="grid-item col p-1 card border-0">
+			<a data-fancybox="gallery" data-caption="${post.title} ${postDate}"  href="${urlVideo}" data-post="${post.id}">	
+				<img class="img-fluid rounded card-img" src="${urlThumb}" alt="" title=""/>			
+				<div class="card-img-overlay d-flex flex-column justify-content-end">
+					<div class="gallery-overlay rounded">
+						<div class="overlay-title">${post.title}</div>
+						<div class="overlay-date">${postDate}</div>
+						<div class="bot-video-play"></div>		
+					</div>
+				</div>
+			</a>
+		</div>
+		`;
+	
+	$('.thegrid').append(html).masonry('appended', html);
+}
+	
+function getFormattedDate(date) {
+	var monthNames = ["January", "February", "March", "April", "May", "June",
+		  "July", "August", "September", "October", "November", "December"];
+		
+	var year = date.substring(0, 4);
+
+	var month = date.substring(5, 7);
+	month = month.startsWith('0') ? month.substring(1) : month;	
+
+	var day = date.substring(8, 10);
+	day = day.startsWith('0') ? day.substring(1) : day;
+  
+	return monthNames[month-1] + ' ' + day + ', ' + year;
+}
+
+function checkOffset(offset, total) {
+	if (offset + 10 >= total)
+		$("#anchornext").addClass("d-none");
+}	
+        
+function formatGrid() {
+	console.log('Images loaded, formatting the grid....');
+	
+	$('.thegrid').masonry({
+		itemSelector: '.grid-item',
+		columnWidth: '.grid-item'
+	});
+		
+	$('.thegrid').imagesLoaded( function() {
+		$('.thegrid').masonry('reloadItems');	
+		$('.thegrid').masonry();
+	})
+  	.done(function() {
+    	removeSpinner();
+    	Fancybox.bind('[data-fancybox]');
+  	});
+}
+
+function removeSpinner() {
+	$('#spinner').remove();
+}
+
+function showError(context, err) {
+	var msg = (err && err.message) ? err.message : String(err);
+	$('main').prepend(
+		'<div class="alert alert-danger m-3" role="alert">' +
+		'<strong>' + context + ':</strong> ' + msg +
+		'</div>'
+	);
+}
+
+function displayLoadingMessage() {
+    $.getJSON('/js/loading-messages.json', function(data) {
+        let messages = data.messages; 
+        let randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        $('#loadingMessage').text(randomMessage);
+    }).fail(function() {
+        $('#loadingMessage').text('Oops! Could not load messages.');
+    });
+}

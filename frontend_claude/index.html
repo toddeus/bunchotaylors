@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#5e72e4" />
+  <title>Bunch-o-Taylors</title>
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- iOS PWA support (Safari ignores manifest.json for these) -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Bunch-o-Taylors" />
+  <link rel="apple-touch-icon" href="app-icon.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- FancyBox 5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5/dist/fancybox/fancybox.css" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:     #5e72e4;
+      --accent-dk:  #4a5cd0;
+      --accent-lt:  #eef0fd;
+      --bg:         #f4f6fd;
+      --card-bg:    #ffffff;
+      --text:       #2d3748;
+      --text-lt:    #4a5568;
+      --muted:      #718096;
+      --border:     #e2e8f0;
+      --overlay-bg: rgba(45,55,72,.72);
+      --radius:     14px;
+      --shadow-sm:  0 2px 8px rgba(94,114,228,.10);
+      --shadow:     0 6px 24px rgba(94,114,228,.14);
+      --shadow-lg:  0 16px 48px rgba(94,114,228,.18);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Loading overlay ───────────────────────────────────────── */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(244,246,253,.92);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: opacity .3s;
+    }
+
+    #loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader-ring {
+      width: 52px;
+      height: 52px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loading-message {
+      font-size: 1rem;
+      color: var(--muted);
+      font-style: italic;
+      text-align: center;
+      max-width: 280px;
+    }
+
+    /* ── Hamburger button ──────────────────────────────────────── */
+    #hamburger {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 900;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: none;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      padding: 0;
+      transition: box-shadow .15s;
+    }
+
+    #hamburger:hover { box-shadow: var(--shadow-lg); }
+
+    .ham-bar {
+      width: 20px;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: transform .25s, opacity .25s;
+    }
+
+    /* ── Drawer overlay ────────────────────────────────────────── */
+    #drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.35);
+      z-index: 910;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s;
+    }
+
+    #drawer-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── Slide-in drawer ───────────────────────────────────────── */
+    #drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 300px;
+      max-width: 85vw;
+      background: var(--card-bg);
+      z-index: 920;
+      transform: translateX(-100%);
+      transition: transform .28s cubic-bezier(.4,0,.2,1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      overflow-y: auto;
+    }
+
+    #drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .drawer-logo img {
+      display: block;
+      width: 100%;
+      max-width: 220px;
+      height: auto;
+    }
+
+    .drawer-tagline {
+      font-size: .8rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .drawer-section {
+      padding: 20px 24px 0;
+    }
+
+    .drawer-section-title {
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .drawer-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: .9375rem;
+      font-weight: 500;
+      transition: background .12s, color .12s;
+      margin-bottom: 2px;
+    }
+
+    .drawer-nav a:hover,
+    .drawer-nav a.active {
+      background: var(--accent-lt);
+      color: var(--accent);
+    }
+
+    .nav-icon { font-size: 1rem; width: 22px; text-align: center; }
+
+    /* Search form in drawer */
+    .search-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: .875rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .search-input:focus { border-color: var(--accent); }
+
+    .search-btn {
+      padding: 9px 14px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .875rem;
+      font-weight: 600;
+      transition: background .15s;
+    }
+
+    .search-btn:hover { background: var(--accent-dk); }
+
+    /* Tag chips */
+    .tag-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .tag-chip {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--accent-lt);
+      color: var(--accent);
+      font-size: .8rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background .12s;
+    }
+
+    .tag-chip:hover { background: #dce0f9; }
+
+    #dynamic-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .drawer-footer {
+      margin-top: auto;
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-signout {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: .875rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: border-color .15s, color .15s;
+    }
+
+    .btn-signout:hover {
+      border-color: #e53e3e;
+      color: #e53e3e;
+    }
+
+    /* ── Mode strip ────────────────────────────────────────────── */
+    .mode-strip {
+      padding: 18px 24px 0 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    #mode-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-lt);
+    }
+
+    /* ── Gallery / Masonry grid (all views) ───────────────────── */
+    #gallery {
+      display: block;
+      position: relative;
+      padding: 20px 24px 24px 72px;
+    }
+
+    .masonry-sizer,
+    .gallery-card { width: calc(25% - 9px); }
+
+    @media (max-width: 1023px) {
+      .masonry-sizer,
+      .gallery-card { width: calc(50% - 6px); }
+    }
+
+    @media (max-width: 479px) {
+      .masonry-sizer,
+      .gallery-card { width: 100%; }
+    }
+
+    /* ── Card ──────────────────────────────────────────────────── */
+    .gallery-card {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      background: var(--card-bg);
+      transition: box-shadow .2s, transform .2s;
+    }
+
+    .gallery-card:hover {
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+
+    .card-anchor {
+      display: block;
+      text-decoration: none;
+    }
+
+    .gallery-img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Always-visible overlay at bottom of card */
+    .card-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 32px 14px 14px;
+      background: linear-gradient(transparent, rgba(0,0,0,.65));
+      pointer-events: none;
+    }
+
+    .card-title {
+      display: block;
+      color: #fff;
+      font-size: .9375rem;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      text-shadow: 0 1px 3px rgba(0,0,0,.4);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-date {
+      font-size: .75rem;
+      color: rgba(255,255,255,.8);
+    }
+
+    .card-tag {
+      font-size: .7rem;
+      font-weight: 600;
+      background: rgba(94,114,228,.85);
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+
+    .card-tag.hidden { display: none; }
+
+    /* Edit button (admin only, JS-controlled) */
+    .card-edit-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.9);
+      border: none;
+      display: none; /* hidden by default; JS shows for admin */
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: .8rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+
+    /* Video play ring */
+    .play-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    }
+
+    .play-ring.hidden { display: none; }
+
+    .play-ring::after {
+      content: '';
+      display: block;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 9px 0 9px 16px;
+      border-color: transparent transparent transparent var(--accent);
+      margin-left: 3px;
+    }
+
+    /* ── Empty state ───────────────────────────────────────────── */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--muted);
+      font-size: 1.125rem;
+    }
+
+    /* ── Pagination ────────────────────────────────────────────── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 8px 24px 40px;
+    }
+
+    .page-btn {
+      padding: 9px 20px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: .875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+
+    .page-btn:hover {
+      border-color: var(--accent);
+      background: var(--accent-lt);
+      color: var(--accent);
+    }
+
+    .page-btn.hidden { display: none; }
+
+    #page-info {
+      font-size: .875rem;
+      color: var(--muted);
+    }
+
+    /* ── Footer ────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: .8rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Responsive ────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      #gallery {
+        padding: 16px 16px 20px 16px;
+      }
+
+      .mode-strip {
+        padding-left: 24px;
+        padding-top: 60px;
+      }
+
+      .pagination { padding-bottom: 24px; }
+    }
+
+    /* Utility */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="loader-ring"></div>
+    <p id="loading-message">Loading your memories&hellip;</p>
+  </div>
+
+  <!-- Hamburger -->
+  <button id="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">
+    <span class="ham-bar"></span>
+    <span class="ham-bar"></span>
+    <span class="ham-bar"></span>
+  </button>
+
+  <!-- Drawer overlay -->
+  <div id="drawer-overlay" aria-hidden="true"></div>
+
+  <!-- Slide-in drawer -->
+  <nav id="drawer" aria-label="Site navigation">
+    <div class="drawer-header">
+      <div class="drawer-logo">
+        <img src="banner.png" alt="Bunch-o-Taylors" />
+      </div>
+      <div class="drawer-tagline">Family memories, one click at a time</div>
+    </div>
+
+    <!-- Main nav -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">Navigate</div>
+      <div class="drawer-nav">
+        <a href="?nav=memories" id="nav-memories">
+          <span class="nav-icon">&#128197;</span> Today in History
+        </a>
+        <a href="?nav=posts" id="nav-posts">
+          <span class="nav-icon">&#128444;</span> All Posts
+        </a>
+        <a href="?nav=posts&amp;tag=video" id="nav-videos">
+          <span class="nav-icon">&#127909;</span> Videos
+        </a>
+        <a href="?" id="nav-random">
+          <span class="nav-icon">&#127922;</span> Random
+        </a>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="drawer-section" style="margin-top:8px;">
+      <div class="drawer-section-title">Search</div>
+      <form class="search-form" id="search-form" role="search">
+        <input
+          type="search"
+          id="search-input"
+          class="search-input"
+          placeholder="Title&hellip;"
+          aria-label="Search posts"
+        />
+        <button type="submit" class="search-btn">Go</button>
+      </form>
+    </div>
+
+    <!-- Static tag chips -->
+    <div class="drawer-section" style="margin-top:12px;">
+      <div class="drawer-section-title">Tags</div>
+      <div class="tag-chips">
+        <a href="?nav=posts&amp;tag=birthday" class="tag-chip">birthday</a>
+        <a href="?nav=posts&amp;tag=holiday" class="tag-chip">holiday</a>
+        <a href="?nav=posts&amp;tag=vacation" class="tag-chip">vacation</a>
+      </div>
+      <!-- Dynamic tags loaded by gallery.js -->
+      <div id="dynamic-tags"></div>
+    </div>
+
+    <!-- Footer / sign out -->
+    <div class="drawer-footer">
+      <button class="btn-signout" id="signout-btn" type="button">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- Mode strip -->
+  <div class="mode-strip">
+    <span id="mode-label">Loading&hellip;</span>
+  </div>
+
+  <!-- Gallery container -->
+  <main>
+    <div id="gallery" role="list" aria-label="Photo gallery"></div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <button class="page-btn hidden" id="prev-btn" type="button">&larr; Previous</button>
+      <span id="page-info"></span>
+      <button class="page-btn hidden" id="next-btn" type="button">Next &rarr;</button>
+    </div>
+  </main>
+
+  <footer>
+    &copy; Taylor Family &mdash; All rights reserved
+  </footer>
+
+  <!-- Card template -->
+  <template id="card-tpl">
+    <div class="gallery-card" role="listitem">
+      <a class="card-anchor" href="#" data-fancybox="gallery" data-caption="">
+        <img class="gallery-img" src="" alt="" loading="lazy" decoding="async" />
+      </a>
+      <div class="card-overlay">
+        <span class="card-title"></span>
+        <div class="card-meta">
+          <span class="card-date"></span>
+          <span class="card-tag hidden"></span>
+        </div>
+      </div>
+      <button class="card-edit-btn" type="button" aria-label="Edit post">&#9998;</button>
+      <div class="play-ring hidden" aria-hidden="true"></div>
+    </div>
+  </template>
+
+  <!-- CDN: FancyBox 5 -->
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5/dist/fancybox/fancybox.umd.js"></script>
+
+  <!-- CDN: Masonry + imagesLoaded (used by default all-photos view) -->
+  <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+
+  <!-- CDN: Cognito -->
+  <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6/dist/amazon-cognito-identity.min.js"></script>
+
+  <!-- App scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/gallery.js"></script>
+
+  <!-- Drawer / hamburger logic -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var drawer = document.getElementById('drawer');
+      var overlay = document.getElementById('drawer-overlay');
+      var signoutBtn = document.getElementById('signout-btn');
+
+      function openDrawer() {
+        drawer.classList.add('open');
+        overlay.classList.add('open');
+        hamburger.setAttribute('aria-expanded', 'true');
+        overlay.removeAttribute('aria-hidden');
+      }
+
+      function closeDrawer() {
+        drawer.classList.remove('open');
+        overlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+
+      hamburger.addEventListener('click', function () {
+        if (drawer.classList.contains('open')) {
+          closeDrawer();
+        } else {
+          openDrawer();
+        }
+      });
+
+      overlay.addEventListener('click', closeDrawer);
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDrawer();
+      });
+
+      // Highlight active nav link
+      var params = new URLSearchParams(window.location.search);
+      var nav = params.get('nav');
+      var tag = params.get('tag');
+
+      if (nav === 'memories') {
+        document.getElementById('nav-memories').classList.add('active');
+      } else if (nav === 'posts' && tag === 'video') {
+        document.getElementById('nav-videos').classList.add('active');
+      } else if (nav === 'posts') {
+        document.getElementById('nav-posts').classList.add('active');
+      } else if (!nav && !params.get('search') && !params.get('post')) {
+        document.getElementById('nav-random').classList.add('active');
+      }
+
+      // Sign out
+      if (signoutBtn) {
+        signoutBtn.addEventListener('click', function () {
+          Auth.signOut();
+        });
+      }
+    })();
+  </script>
+
+  <!-- Service worker registration (enables update detection & offline caching) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        // When a new service worker is waiting, it means a new version was deployed.
+        // Reload once it activates so users always get the latest build.
+        reg.addEventListener('updatefound', function () {
+          var newWorker = reg.installing;
+          newWorker.addEventListener('statechange', function () {
+            if (newWorker.state === 'activated') {
+              window.location.reload();
+            }
+          });
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>

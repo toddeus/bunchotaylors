@@ -1,0 +1,15 @@
+{
+  "name": "bunch-o-taylors-infra",
+  "version": "1.0.0",
+  "description": "Migration and infrastructure scripts for Bunch-o-Taylors",
+  "scripts": {
+    "migrate:dry":  "node migrate.js --dry-run",
+    "migrate:test": "node migrate.js --table bot-posts-test",
+    "migrate:prod": "node migrate.js --table bot-posts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb":    "^3.600.0",
+    "better-sqlite3":           "^11.0.0"
+  }
+}

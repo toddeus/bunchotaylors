@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sqlite3 temp/bunchotaylors.db \".schema\")",
+      "Bash(where sqlite3:*)",
+      "Bash(python3 -c \"import sqlite3; print\\('python sqlite3 available'\\)\")",
+      "Bash(python -c \"import sqlite3; print\\('python sqlite3 available'\\)\")",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(node -e ':*)",
+      "Bash(cmd:*)",
+      "Bash(powershell:*)"
+    ]
+  }
+}

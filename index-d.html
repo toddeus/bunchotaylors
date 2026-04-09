@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bunch-o-Taylors · Light + Drawer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!--
+    STYLE D (revised) — Light / Playful / Family
+    Nav:     Floating hamburger → light slide-in drawer
+    Header:  None — photos start at top with small margin
+    Overlay: Always visible (mobile-first)
+    Footer:  Natural scroll position (not fixed)
+    Palette: Argon-inspired — indigo/coral/teal on white + soft blue-gray bg
+  -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #f4f6fd;
+      --surface:      #ffffff;
+      --border:       #e8ecf4;
+      --border-hi:    #d0d7e8;
+      --text:         #32325d;
+      --text-muted:   #8898aa;
+      --text-dim:     #adb5bd;
+      --accent:       #5e72e4;   /* indigo */
+      --accent-light: #eef0fc;
+      --coral:        #fb6340;
+      --teal:         #11cdef;
+      --green:        #2dce89;
+      --purple:       #8965e0;
+      --shadow-sm:    0 2px 12px rgba(94,114,228,0.10);
+      --shadow-md:    0 6px 24px rgba(94,114,228,0.16);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════════
+       DRAWER OVERLAY
+    ══════════════════════════════════════════ */
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(50,50,93,0.28);
+      z-index: 100;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(3px);
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ══════════════════════════════════════════
+       SIDEBAR DRAWER — light, playful
+    ══════════════════════════════════════════ */
+    .drawer {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 288px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      z-index: 101;
+      transform: translateX(-100%);
+      transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column;
+      box-shadow: 4px 0 32px rgba(94,114,228,0.12);
+    }
+    .drawer.open { transform: translateX(0); }
+
+    /* Drawer gradient header band */
+    .drawer-brand {
+      background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+      padding: 28px 20px 22px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .drawer-logo {
+      font-size: 17px; font-weight: 700;
+      color: #fff; letter-spacing: -0.02em;
+    }
+    .drawer-logo span { opacity: 0.75; }
+    .drawer-close {
+      background: rgba(255,255,255,0.2); border: none;
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #fff;
+      transition: background 0.15s;
+    }
+    .drawer-close:hover { background: rgba(255,255,255,0.35); }
+
+    /* Mode badge inside drawer */
+    .drawer-mode {
+      background: rgba(255,255,255,0.18);
+      border-radius: 999px; padding: 4px 12px;
+      font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.9);
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 10px; width: fit-content;
+    }
+
+    .drawer-search { padding: 16px 16px 0; }
+    .drawer-search input {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 9px 14px;
+      font-size: 13.5px; font-family: inherit;
+      outline: none; color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .drawer-search input::placeholder { color: var(--text-dim); }
+    .drawer-search input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(94,114,228,0.12);
+    }
+
+    .drawer-nav { flex: 1; padding: 6px 10px; overflow-y: auto; }
+    .drawer-section-label {
+      font-size: 10px; font-weight: 700;
+      color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 0.1em; padding: 16px 8px 6px;
+    }
+    .drawer-nav a {
+      display: flex; align-items: center; gap: 12px;
+      padding: 9px 10px; border-radius: 9px;
+      text-decoration: none; color: var(--text-muted);
+      font-size: 13.5px; font-weight: 500;
+      transition: background 0.12s, color 0.12s;
+    }
+    .drawer-nav a:hover { background: var(--accent-light); color: var(--accent); }
+    .drawer-nav a.active {
+      background: var(--accent-light);
+      color: var(--accent); font-weight: 600;
+    }
+    .drawer-nav a .nav-icon { flex-shrink: 0; }
+
+    /* Tag chips — colorful */
+    .tag-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 10px 4px; }
+    .tag-chip {
+      font-size: 11.5px; padding: 4px 12px;
+      border-radius: 999px; font-weight: 500;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.12s;
+    }
+    .tag-chip:hover { opacity: 0.82; transform: translateY(-1px); }
+    .chip-indigo  { background: #eef0fc; color: var(--accent); }
+    .chip-coral   { background: #fff0ec; color: var(--coral); }
+    .chip-teal    { background: #e8fbff; color: #0ca9c0; }
+    .chip-green   { background: #e6faf3; color: #1aab6d; }
+    .chip-purple  { background: #f2eeff; color: var(--purple); }
+
+    .soon-badge {
+      font-size: 10px; background: var(--bg);
+      color: var(--text-dim); padding: 2px 8px;
+      border-radius: 999px; margin-left: auto;
+      border: 1px solid var(--border);
+    }
+    .drawer-nav a.muted { opacity: 0.45; cursor: not-allowed; }
+    .drawer-nav a.muted:hover { background: none; color: var(--text-muted); transform: none; }
+
+    .drawer-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--text-dim);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .drawer-footer .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════
+       FLOATING HAMBURGER — no header, just a button
+    ══════════════════════════════════════════ */
+    .hamburger {
+      position: fixed; top: 12px; left: 12px; z-index: 99;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 10px;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      transition: box-shadow 0.2s, transform 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hamburger:hover {
+      box-shadow: 0 8px 28px rgba(94,114,228,0.22);
+      transform: translateY(-1px);
+    }
+    .hamburger svg { display: block; }
+
+    /* ══════════════════════════════════════════
+       GALLERY — light, masonry, always-visible overlay
+    ══════════════════════════════════════════ */
+    .gallery-wrap {
+      padding: 10px 2px 0; /* small top margin, no header above */
+    }
+    .gallery {
+      columns: 4 200px;
+      gap: 2px;
+    }
+    @media (max-width: 480px)  { .gallery { columns: 1; } }
+    @media (min-width: 481px)  and (max-width: 720px)  { .gallery { columns: 2; } }
+    @media (min-width: 721px)  and (max-width: 1080px) { .gallery { columns: 3; } }
+
+    .gallery-item {
+      break-inside: avoid;
+      margin-bottom: 2px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--border);
+      display: block;
+    }
+    .gallery-item img {
+      width: 100%; display: block;
+      transition: transform 0.38s ease, filter 0.3s ease;
+      filter: brightness(0.97);
+    }
+    .gallery-item:hover img { transform: scale(1.025); filter: brightness(1.0); }
+    @media (hover: none) {
+      .gallery-item img { filter: brightness(0.95); }
+      .gallery-item:hover img { transform: none; }
+    }
+
+    /* Always-visible overlay — bottom gradient */
+    .gallery-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 36px 12px 10px;
+      background: linear-gradient(to top, rgba(50,50,93,0.78) 0%, rgba(50,50,93,0.2) 65%, transparent 100%);
+    }
+    .overlay-title {
+      color: #fff;
+      font-size: 12.5px; font-weight: 600;
+      line-height: 1.35;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .overlay-meta {
+      color: rgba(255,255,255,0.65);
+      font-size: 10.5px; margin-top: 3px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .overlay-tag {
+      color: #a5f3fc; /* soft cyan — readable + playful on dark gradient */
+      font-size: 10px;
+    }
+
+    /* Video play indicator */
+    .play-ring {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -60%);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      border: 1.5px solid rgba(255,255,255,0.7);
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+
+    /* Edit button — hover only on desktop */
+    .edit-btn {
+      position: absolute; top: 8px; right: 8px;
+      opacity: 0;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(4px);
+      border: 1px solid var(--border-hi);
+      border-radius: 7px; padding: 5px 10px;
+      font-size: 11px; font-family: inherit; font-weight: 500;
+      cursor: pointer; color: var(--text-muted);
+      transition: opacity 0.18s, color 0.15s, border-color 0.15s;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .edit-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .gallery-item:hover .edit-btn { opacity: 1; }
+
+    /* ══════════════════════════════════════════
+       FOOTER — natural scroll position (not fixed)
+    ══════════════════════════════════════════ */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      /* no position:sticky — scrolls with content */
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 64px;
+      margin-top: 2px;
+    }
+    footer button {
+      background: none; border: none;
+      font-size: 13px; font-weight: 600;
+      font-family: inherit; color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-radius: 10px;
+      transition: background 0.15s, color 0.15s;
+      min-height: 44px; /* comfortable tap target */
+    }
+    footer button:hover { background: var(--accent-light); color: var(--accent); }
+    footer button:disabled { color: var(--border-hi); cursor: not-allowed; background: none; }
+    footer span { font-size: 12px; color: var(--text-dim); }
+  </style>
+</head>
+<body>
+
+  <!-- OVERLAY -->
+  <div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
+
+  <!-- ══════════════════════════════════════════
+       SIDEBAR DRAWER — light, Argon-inspired
+  ══════════════════════════════════════════ -->
+  <aside class="drawer" id="drawer">
+
+    <!-- Gradient brand band -->
+    <div class="drawer-brand">
+      <div>
+        <div class="drawer-logo">Bunch<span>-o-</span>Taylors</div>
+        <div class="drawer-mode">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+          This Day in History · April 2
+        </div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="drawer-search">
+      <input type="text" placeholder="Search memories…">
+    </div>
+
+    <nav class="drawer-nav">
+      <div class="drawer-section-label">Browse</div>
+      <a href="#" class="active">
+        <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+        </svg>
+        This Day in History
+      </a>
+      <a href="#">
+        <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        </svg>
+        Most Recent
+      </a>
+      <a href="#">
+        <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        </svg>
+        Random
+      </a>
+
+      <div class="drawer-section-label">Tags</div>
+      <div class="tag-chips">
+        <a href="#" class="tag-chip chip-indigo">family</a>
+        <a href="#" class="tag-chip chip-coral">birthday</a>
+        <a href="#" class="tag-chip chip-teal">travel</a>
+        <a href="#" class="tag-chip chip-green">event</a>
+        <a href="#" class="tag-chip chip-purple">video</a>
+      </div>
+
+      <div class="drawer-section-label">Coming Soon</div>
+      <a href="#" class="muted">
+        <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        Photo Map
+        <span class="soon-badge">soon</span>
+      </a>
+      <a href="#" class="muted">
+        <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Add Post
+        <span class="soon-badge">soon</span>
+      </a>
+      <a href="#" class="muted">
+        <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Edit Post
+        <span class="soon-badge">soon</span>
+      </a>
+    </nav>
+
+    <div class="drawer-footer">
+      <div class="dot"></div>
+      Taylor Family
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════
+       FLOATING HAMBURGER — no header, just this button
+  ══════════════════════════════════════════ -->
+  <button class="hamburger" onclick="openDrawer()" aria-label="Open navigation">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5e72e4" stroke-width="2.5" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+
+  <!-- ══════════════════════════════════════════
+       GALLERY — starts at top, small top padding
+  ══════════════════════════════════════════ -->
+  <div class="gallery-wrap">
+    <div class="gallery">
+
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/christmas23/800/1000" alt="Christmas Morning">
+        <div class="gallery-overlay">
+          <div class="overlay-title">Christmas Morning</div>
+          <div class="overlay-meta"><span>December 25, 2023</span><span class="overlay-tag">family</span></div>
+        </div>
+        <button class="edit-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/roadtrip23/800/533" alt="Summer Road Trip">
+        <div class="play-ring">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="6,3 20,12 6,21"/></svg>
+        </div>
+        <div class="gallery-overlay">
+          <div class="overlay-title">Summer Road Trip</div>
+          <div class="overlay-meta"><span>July 12, 2023</span><span class="overlay-tag">travel</span></div>
+        </div>
+        <button class="edit-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/scottypark/800/800" alt="Scotty at the Park">
+        <div class="gallery-overlay">
+          <div class="overlay-title">Scotty at the Park</div>
+          <div class="overlay-meta"><span>March 15, 2023</span><span class="overlay-tag">birthday</span></div>
+        </div>
+        <button class="edit-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/thanksgiving23/800/1100" alt="Thanksgiving Dinner">
+        <div class="gallery-overlay">
+          <div class="overlay-title">Thanksgiving Dinner</div>
+          <div class="overlay-meta"><span>November 23, 2023</span><span class="overlay-tag">family</span></div>
+        </div>
+        <button class="edit-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/nye22/800/533" alt="New Year's Eve">
+        <div class="gallery-overlay">
+          <div class="overlay-title">New Year's Eve Party</div>
+          <div class="overlay-meta"><span>December 31, 2022</span><span class="overlay-tag">event</span></div>
+        </div>
+        <button class="edit-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/milosnow/800/900" alt="Milo's First Snow">
+        <div class="gallery-overlay">
+          <div class="overlay-title">Milo's First Snow</div>
+          <div class="overlay-meta"><span>January 8, 2023</span><span class="overlay-tag">birthday</span></div>
+        </div>
+        <button class="edit-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/july4bbq/800/600" alt="Fourth of July BBQ">
+        <div class="play-ring">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="6,3 20,12 6,21"/></svg>
+        </div>
+        <div class="gallery-overlay">
+          <div class="overlay-title">Fourth of July BBQ</div>
+          <div class="overlay-meta"><span>July 4, 2022</span><span class="overlay-tag">event</span></div>
+        </div>
+        <button class="edit-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/beachday/800/533" alt="Beach Day">
+        <div class="gallery-overlay">
+          <div class="overlay-title">Beach Day</div>
+          <div class="overlay-meta"><span>August 12, 2023</span><span class="overlay-tag">travel</span></div>
+        </div>
+        <button class="edit-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/holidaycard/800/1000" alt="Holiday Card Photo">
+        <div class="gallery-overlay">
+          <div class="overlay-title">Holiday Card Photo</div>
+          <div class="overlay-meta"><span>December 1, 2023</span><span class="overlay-tag">family</span></div>
+        </div>
+        <button class="edit-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/schoolplay/800/600" alt="Spring School Play">
+        <div class="gallery-overlay">
+          <div class="overlay-title">Spring School Play</div>
+          <div class="overlay-meta"><span>May 20, 2023</span><span class="overlay-tag">event</span></div>
+        </div>
+        <button class="edit-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       FOOTER — end of scroll, not fixed
+  ══════════════════════════════════════════ -->
+  <footer>
+    <button disabled>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m15 18-6-6 6-6"/>
+      </svg>
+      Previous
+    </button>
+    <span>April 2 · 12 memories</span>
+    <button>
+      Next
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m9 18 6-6-6-6"/>
+      </svg>
+    </button>
+  </footer>
+
+  <script>
+    function openDrawer() {
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+  </script>
+</body>
+</html>
