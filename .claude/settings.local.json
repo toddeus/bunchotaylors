@@ -10,7 +10,8 @@
       "Bash(node -e ':*)",
       "Bash(cmd:*)",
       "Bash(powershell:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(git remote:*)"
     ]
   }
 }

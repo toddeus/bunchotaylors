@@ -6,6 +6,8 @@ Bunch-O-Taylors is a private family photo and video gallery website. It is a sta
 
 The site focuses on a photo gallery for browsing, searching, viewing photo albums and videos organized by date and tags. The default landing page is a "this day in history" showing all posts for the current day. There is also a random feature to display photos/videos from 10 random posts.
 
+The primary gallery viewer shows all images from an individual post, without opening up the post. For example, the random or this day in history may show 10 posts with average of 5 images each. The screen displays all 50.
+
 ---
 
 
@@ -13,10 +15,10 @@ The site focuses on a photo gallery for browsing, searching, viewing photo album
 
 - Cost effective AWS solution
 - Hosting: Static S3 website 
-- AWS Lambda to perform API calls to send/receive dynamodb data, retrieve S3 media entities. node.js is preferred.
+- AWS Lambda to perform API calls to send/receive dynamodb data via node.js.
 - Database: dynamodb
 - User Interface: HTML and bootstrap (solutions that are supported on static s3 websites)
-- Media Hosting: No changes to the S3 hosting of media files
+- Media Hosting: An S3 bucket isolated from the website S3 bucket
 - User Authentication: AWS JWT
 
 ---
