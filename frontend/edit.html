@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Post - Bunch-o-Taylors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6/dist/amazon-cognito-identity.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+</head>
+<body>
+  <header class="sticky-top bg-body">
+    <nav class="navbar d-flex justify-content-center">
+      <a href="menu.html">
+        <img src="banner.png" class="img-fluid mx-auto">
+      </a>
+    </nav>
+  </header>
+  <aside id="spinner" class="position-fixed bg-body">
+    <div class="text-center">
+      <div class="spinner-border" role="status" style="width: 3rem; height: 3rem;"></div>
+      <p class="fw-medium fs-3">Loading......</p>
+    </div>
+  </aside>
+  <main>
+    <div class="container" style="max-width: 720px;">
+      <div id="error-area"></div>
+      <form id="editForm" class="mt-3 mb-5">
+
+        <div class="mb-3">
+          <label for="f-title" class="form-label fw-semibold">Title</label>
+          <input type="text" id="f-title" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+          <label for="f-postdate" class="form-label fw-semibold">Date</label>
+          <input type="date" id="f-postdate" class="form-control" required />
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col">
+            <label for="f-tag1" class="form-label fw-semibold">Tag 1</label>
+            <input type="text" id="f-tag1" class="form-control" />
+          </div>
+          <div class="col">
+            <label for="f-tag2" class="form-label fw-semibold">Tag 2</label>
+            <input type="text" id="f-tag2" class="form-control" />
+          </div>
+          <div class="col">
+            <label for="f-tag3" class="form-label fw-semibold">Tag 3</label>
+            <input type="text" id="f-tag3" class="form-control" />
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="f-dir" class="form-label fw-semibold">Directory</label>
+          <input type="text" id="f-dir" class="form-control" />
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col">
+            <label for="f-thumb" class="form-label fw-semibold">Thumbnail</label>
+            <input type="text" id="f-thumb" class="form-control" />
+          </div>
+          <div class="col">
+            <label for="f-video" class="form-label fw-semibold">Video</label>
+            <input type="text" id="f-video" class="form-control" />
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col">
+            <label for="f-lat" class="form-label fw-semibold">Latitude</label>
+            <input type="number" step="any" id="f-lat" class="form-control" placeholder="e.g. 40.7128" />
+          </div>
+          <div class="col">
+            <label for="f-lon" class="form-label fw-semibold">Longitude</label>
+            <input type="number" step="any" id="f-lon" class="form-control" placeholder="e.g. -74.0060" />
+          </div>
+        </div>
+
+        <div class="mb-4" id="items-section">
+          <label class="form-label fw-semibold">Photos</label>
+          <div class="row row-cols-2 row-cols-md-4 g-2" id="items-grid"></div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end pb-4">
+          <a href="#" id="btn-cancel" class="btn btn-outline-secondary px-4">Cancel</a>
+          <button type="submit" id="btn-save" class="btn btn-primary px-4">Save</button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+<script>
+$(document).ready(function () {
+
+  Auth.restoreSession().then(function (valid) {
+    if (!valid) {
+      window.location.href = 'signin.html?ref=' + encodeURIComponent(window.location.href);
+    }
+  });
+
+  var params = new URLSearchParams(window.location.search);
+  var postId = params.get('post');
+
+  if (!postId) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  var currentItems = [];
+  var postDir = '';
+
+  $('#btn-cancel').attr('href', 'index.html?post=' + encodeURIComponent(postId));
+
+  Auth.apiFetch('bot/posts/' + postId).then(function (json) {
+    var post = json.posts[0];
+    if (!post) {
+      showEditError('Post not found.');
+      removeSpinner();
+      return;
+    }
+
+    postDir = post.dir || '';
+    currentItems = post.items ? post.items.slice() : [];
+
+    $('#f-title').val(post.title || '');
+    $('#f-postdate').val(post.postdate || '');
+    $('#f-tag1').val(nullTag(post.tag1));
+    $('#f-tag2').val(nullTag(post.tag2));
+    $('#f-tag3').val(nullTag(post.tag3));
+    $('#f-dir').val(post.dir || '');
+    $('#f-thumb').val(post.thumb || '');
+    $('#f-video').val(post.video || '');
+    if (post.location) {
+      $('#f-lat').val(post.location.lat != null ? post.location.lat : '');
+      $('#f-lon').val(post.location.lon != null ? post.location.lon : '');
+    }
+
+    renderItems();
+    removeSpinner();
+  }).catch(function (err) {
+    showEditError('Failed to load post: ' + err.message);
+    removeSpinner();
+  });
+
+  function nullTag(val) {
+    if (!val || val === 'NULL') return '';
+    return val;
+  }
+
+  function renderItems() {
+    var grid = $('#items-grid');
+    grid.empty();
+
+    if (currentItems.length === 0) {
+      grid.append('<p class="text-muted col-12 mt-1">No photos.</p>');
+      return;
+    }
+
+    var dir = $('#f-dir').val() || postDir;
+    $.each(currentItems, function (i, item) {
+      var url = _config.s3.url + dir + '/' + item;
+      grid.append(
+        '<div class="col" data-item="' + escAttr(item) + '">' +
+          '<div class="position-relative">' +
+            '<img src="' + escAttr(url) + '" class="img-fluid rounded" alt="" />' +
+            '<button type="button" class="btn-remove-item" data-item="' + escAttr(item) + '">&#x00D7;</button>' +
+          '</div>' +
+        '</div>'
+      );
+    });
+  }
+
+  function escAttr(str) {
+    return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  $(document).on('click', '.btn-remove-item', function () {
+    var item = $(this).data('item');
+    currentItems = currentItems.filter(function (i) { return i !== item; });
+    $('[data-item="' + item + '"].col').remove();
+    if (currentItems.length === 0) {
+      $('#items-grid').append('<p class="text-muted col-12 mt-1">No photos.</p>');
+    }
+  });
+
+  $('#editForm').on('submit', function (e) {
+    e.preventDefault();
+
+    var lat = $('#f-lat').val();
+    var lon = $('#f-lon').val();
+    var location = null;
+    if (lat !== '' || lon !== '') {
+      location = {
+        lat: lat !== '' ? parseFloat(lat) : null,
+        lon: lon !== '' ? parseFloat(lon) : null,
+      };
+    }
+
+    var data = {
+      title: $('#f-title').val(),
+      postdate: $('#f-postdate').val(),
+      tag1: $('#f-tag1').val() || null,
+      tag2: $('#f-tag2').val() || null,
+      tag3: $('#f-tag3').val() || null,
+      dir: $('#f-dir').val(),
+      thumb: $('#f-thumb').val() || null,
+      video: $('#f-video').val() || null,
+      items: currentItems,
+      location: location,
+    };
+
+    $('#btn-save').prop('disabled', true).text('Saving...');
+
+    Auth.apiFetch('bot/posts/' + postId, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }).then(function () {
+      window.location.href = 'index.html?post=' + encodeURIComponent(postId);
+    }).catch(function (err) {
+      showEditError('Save failed: ' + err.message);
+      $('#btn-save').prop('disabled', false).text('Save');
+    });
+  });
+
+  function removeSpinner() {
+    $('#spinner').remove();
+  }
+
+  function showEditError(msg) {
+    $('#error-area').html(
+      '<div class="alert alert-danger mt-3" role="alert">' + msg + '</div>'
+    );
+  }
+
+});
+</script>
+</body>
+</html>

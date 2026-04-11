@@ -12,7 +12,7 @@ The site supports browsing by random posts, "this day in history" (the default/P
 
 | Layer | Technology |
 |-------|-----------|
-| Hosting | Static S3 website |
+| Hosting | Static S3 website at S3 bucket `bunch-o-taylors.com` |
 | API | AWS Lambda (Node.js 24, ESM) via SAM |
 | API Gateway | AWS HTTP API (API Gateway v2) |
 | Database | DynamoDB (`bot-posts` table) |

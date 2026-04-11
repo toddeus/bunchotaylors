@@ -4,6 +4,7 @@ import {
   ScanCommand,
   GetCommand,
   QueryCommand,
+  UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE;
@@ -84,6 +85,59 @@ export async function queryByDate(ascending = false) {
   } while (lastKey);
 
   return items;
+}
+
+/**
+ * Update a post by id. Null/empty string values REMOVE the attribute; all others SET it.
+ * items is always SET (even if empty array).
+ * Returns the updated item.
+ * @param {string} id
+ * @param {object} fields - map of attribute name to new value
+ * @returns {Promise<object|null>}
+ */
+export async function updatePost(id, fields) {
+  const setExpressions = [];
+  const removeExpressions = [];
+  const names = {};
+  const values = {};
+
+  for (const [key, value] of Object.entries(fields)) {
+    const nameAlias = `#f_${key}`;
+    names[nameAlias] = key;
+
+    const isNullish = value === null || value === undefined || value === '';
+    const isEmptyArray = Array.isArray(value) && value.length === 0;
+
+    if (isNullish && !isEmptyArray) {
+      removeExpressions.push(nameAlias);
+    } else {
+      const valueAlias = `:v_${key}`;
+      values[valueAlias] = value;
+      setExpressions.push(`${nameAlias} = ${valueAlias}`);
+    }
+  }
+
+  let updateExpression = '';
+  if (setExpressions.length > 0) {
+    updateExpression += 'SET ' + setExpressions.join(', ');
+  }
+  if (removeExpressions.length > 0) {
+    if (updateExpression) updateExpression += ' ';
+    updateExpression += 'REMOVE ' + removeExpressions.join(', ');
+  }
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: { id },
+    UpdateExpression: updateExpression,
+    ExpressionAttributeNames: names,
+  };
+  if (Object.keys(values).length > 0) {
+    params.ExpressionAttributeValues = values;
+  }
+
+  await ddb.send(new UpdateCommand(params));
+  return getById(id);
 }
 
 /**

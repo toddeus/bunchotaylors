@@ -234,8 +234,8 @@ var require_dist_cjs3 = __commonJS({
     var types = require_dist_cjs();
     var getHttpHandlerExtensionConfiguration5 = (runtimeConfig) => {
       return {
-        setHttpHandler(handler7) {
-          runtimeConfig.httpHandler = handler7;
+        setHttpHandler(handler8) {
+          runtimeConfig.httpHandler = handler8;
         },
         httpHandler() {
           return runtimeConfig.httpHandler;
@@ -987,8 +987,8 @@ var require_dist_cjs5 = __commonJS({
           Operation: commandName.slice(0, -7),
           Identifiers: identifiers
         });
-        const handler7 = command.resolveMiddleware(options.clientStack, config, options.options);
-        handler7(command).then((result) => {
+        const handler8 = command.resolveMiddleware(options.clientStack, config, options.options);
+        handler8(command).then((result) => {
           endpointCache2.set(cacheKey, result.output.Endpoints);
           if (requestQueue[cacheKey]) {
             requestQueue[cacheKey].forEach(({ resolve: resolve2 }) => {
@@ -10078,14 +10078,14 @@ var require_dist_cjs35 = __commonJS({
             identifyOnResolve = toggle;
           return identifyOnResolve;
         },
-        resolve: (handler7, context) => {
+        resolve: (handler8, context) => {
           for (const middleware of getMiddlewareList().map((entry) => entry.middleware).reverse()) {
-            handler7 = middleware(handler7, context);
+            handler8 = middleware(handler8, context);
           }
           if (identifyOnResolve) {
             console.log(stack.identify());
           }
-          return handler7;
+          return handler8;
         }
       };
       return stack;
@@ -10133,27 +10133,27 @@ var require_dist_cjs36 = __commonJS({
         const options = typeof optionsOrCb !== "function" ? optionsOrCb : void 0;
         const callback = typeof optionsOrCb === "function" ? optionsOrCb : cb;
         const useHandlerCache = options === void 0 && this.config.cacheMiddleware === true;
-        let handler7;
+        let handler8;
         if (useHandlerCache) {
           if (!this.handlers) {
             this.handlers = /* @__PURE__ */ new WeakMap();
           }
           const handlers = this.handlers;
           if (handlers.has(command.constructor)) {
-            handler7 = handlers.get(command.constructor);
+            handler8 = handlers.get(command.constructor);
           } else {
-            handler7 = command.resolveMiddleware(this.middlewareStack, this.config, options);
-            handlers.set(command.constructor, handler7);
+            handler8 = command.resolveMiddleware(this.middlewareStack, this.config, options);
+            handlers.set(command.constructor, handler8);
           }
         } else {
           delete this.handlers;
-          handler7 = command.resolveMiddleware(this.middlewareStack, this.config, options);
+          handler8 = command.resolveMiddleware(this.middlewareStack, this.config, options);
         }
         if (callback) {
-          handler7(command).then((result) => callback(null, result.output), (err2) => callback(err2)).catch(() => {
+          handler8(command).then((result) => callback(null, result.output), (err2) => callback(err2)).catch(() => {
           });
         } else {
-          return handler7(command).then((result) => result.output);
+          return handler8(command).then((result) => result.output);
         }
       }
       destroy() {
@@ -28984,8 +28984,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var BatchGetCommand = class extends DynamoDBDocumentClientCommand {
@@ -29024,8 +29024,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var BatchWriteCommand = class extends DynamoDBDocumentClientCommand {
@@ -29076,8 +29076,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var DeleteCommand = class extends DynamoDBDocumentClientCommand {
@@ -29109,8 +29109,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var ExecuteStatementCommand = class extends DynamoDBDocumentClientCommand {
@@ -29135,8 +29135,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var ExecuteTransactionCommand = class extends DynamoDBDocumentClientCommand {
@@ -29166,8 +29166,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var GetCommand2 = class extends DynamoDBDocumentClientCommand {
@@ -29189,8 +29189,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var PutCommand = class extends DynamoDBDocumentClientCommand {
@@ -29222,8 +29222,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var QueryCommand2 = class extends DynamoDBDocumentClientCommand {
@@ -29259,8 +29259,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var ScanCommand2 = class extends DynamoDBDocumentClientCommand {
@@ -29291,8 +29291,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var TransactGetCommand = class extends DynamoDBDocumentClientCommand {
@@ -29324,8 +29324,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var TransactWriteCommand = class extends DynamoDBDocumentClientCommand {
@@ -29372,11 +29372,11 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
-    var UpdateCommand = class extends DynamoDBDocumentClientCommand {
+    var UpdateCommand2 = class extends DynamoDBDocumentClientCommand {
       input;
       inputKeyNodes = {
         "Key": ALL_VALUES,
@@ -29410,8 +29410,8 @@ var require_dist_cjs59 = __commonJS({
       resolveMiddleware(clientStack, configuration, options) {
         this.addMarshallingMiddleware(configuration);
         const stack = clientStack.concat(this.middlewareStack);
-        const handler7 = this.clientCommand.resolveMiddleware(stack, configuration, options);
-        return async () => handler7(this.clientCommand);
+        const handler8 = this.clientCommand.resolveMiddleware(stack, configuration, options);
+        return async () => handler8(this.clientCommand);
       }
     };
     var DynamoDBDocumentClient2 = class _DynamoDBDocumentClient extends smithyClient.Client {
@@ -29594,7 +29594,7 @@ var require_dist_cjs59 = __commonJS({
         }
       }
       update(args, optionsOrCb, cb) {
-        const command = new UpdateCommand(args);
+        const command = new UpdateCommand2(args);
         if (typeof optionsOrCb === "function") {
           this.send(command, optionsOrCb);
         } else if (typeof cb === "function") {
@@ -29625,7 +29625,7 @@ var require_dist_cjs59 = __commonJS({
     exports.ScanCommand = ScanCommand2;
     exports.TransactGetCommand = TransactGetCommand;
     exports.TransactWriteCommand = TransactWriteCommand;
-    exports.UpdateCommand = UpdateCommand;
+    exports.UpdateCommand = UpdateCommand2;
     exports.paginateQuery = paginateQuery;
     exports.paginateScan = paginateScan;
   }
@@ -30761,8 +30761,8 @@ async function verifyToken(authHeader) {
 }
 
 // lib/db.js
-var import_client_dynamodb = __toESM(require_dist_cjs57());
-var import_lib_dynamodb = __toESM(require_dist_cjs59());
+var import_client_dynamodb = __toESM(require_dist_cjs57(), 1);
+var import_lib_dynamodb = __toESM(require_dist_cjs59(), 1);
 var TABLE_NAME = process.env.DYNAMODB_TABLE;
 var client = new import_client_dynamodb.DynamoDBClient({});
 var ddb = import_lib_dynamodb.DynamoDBDocumentClient.from(client, {
@@ -30817,6 +30817,44 @@ async function queryByDate(ascending = false) {
     lastKey = result.LastEvaluatedKey;
   } while (lastKey);
   return items;
+}
+async function updatePost(id, fields) {
+  const setExpressions = [];
+  const removeExpressions = [];
+  const names = {};
+  const values = {};
+  for (const [key, value] of Object.entries(fields)) {
+    const nameAlias = `#f_${key}`;
+    names[nameAlias] = key;
+    const isNullish = value === null || value === void 0 || value === "";
+    const isEmptyArray = Array.isArray(value) && value.length === 0;
+    if (isNullish && !isEmptyArray) {
+      removeExpressions.push(nameAlias);
+    } else {
+      const valueAlias = `:v_${key}`;
+      values[valueAlias] = value;
+      setExpressions.push(`${nameAlias} = ${valueAlias}`);
+    }
+  }
+  let updateExpression = "";
+  if (setExpressions.length > 0) {
+    updateExpression += "SET " + setExpressions.join(", ");
+  }
+  if (removeExpressions.length > 0) {
+    if (updateExpression) updateExpression += " ";
+    updateExpression += "REMOVE " + removeExpressions.join(", ");
+  }
+  const params = {
+    TableName: TABLE_NAME,
+    Key: { id },
+    UpdateExpression: updateExpression,
+    ExpressionAttributeNames: names
+  };
+  if (Object.keys(values).length > 0) {
+    params.ExpressionAttributeValues = values;
+  }
+  await ddb.send(new import_lib_dynamodb.UpdateCommand(params));
+  return getById(id);
 }
 async function queryByMonthDay(monthday) {
   const items = [];
@@ -30935,9 +30973,39 @@ async function handler3(id) {
   };
 }
 
+// routes/post-update.js
+async function handler4(id, body) {
+  const data2 = typeof body === "string" ? JSON.parse(body) : body;
+  const fields = {};
+  for (const f5 of ["title", "dir", "thumb", "video", "tag1", "tag2", "tag3"]) {
+    if (f5 in data2) {
+      fields[f5] = data2[f5] || null;
+    }
+  }
+  if ("postdate" in data2) {
+    fields.postdate = data2.postdate || null;
+    fields.monthday = data2.postdate ? data2.postdate.substring(5, 10) : null;
+  }
+  if ("items" in data2) {
+    fields.items = Array.isArray(data2.items) ? data2.items : [];
+  }
+  if ("location" in data2) {
+    if (data2.location && (data2.location.lat !== null || data2.location.lon !== null)) {
+      fields.location = {
+        lat: data2.location.lat !== "" && data2.location.lat !== null ? Number(data2.location.lat) : null,
+        lon: data2.location.lon !== "" && data2.location.lon !== null ? Number(data2.location.lon) : null
+      };
+    } else {
+      fields.location = null;
+    }
+  }
+  const updated = await updatePost(id, fields);
+  return { total: 1, offset: 0, tag: null, posts: [updated] };
+}
+
 // routes/search.js
 var PAGE_SIZE2 = 10;
-async function handler4(term, queryParams) {
+async function handler5(term, queryParams) {
   const offset = parseInt(queryParams.offset || "0", 10);
   const termLower = term.toLowerCase();
   const allItems = await queryByDate(false);
@@ -30965,7 +31033,7 @@ function getTodayMonthDay() {
   const [month, day] = nyDate.split("/");
   return `${month}-${day}`;
 }
-async function handler5(queryParams) {
+async function handler6(queryParams) {
   const offset = parseInt(queryParams.offset || "0", 10);
   let monthday;
   if (queryParams.month && queryParams.day) {
@@ -30988,7 +31056,7 @@ async function handler5(queryParams) {
 var CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Authorization, Content-Type",
-  "Access-Control-Allow-Methods": "GET, OPTIONS"
+  "Access-Control-Allow-Methods": "GET, PUT, OPTIONS"
 };
 function response(statusCode, body, extraHeaders = {}) {
   return {
@@ -31001,7 +31069,7 @@ function response(statusCode, body, extraHeaders = {}) {
     body: typeof body === "string" ? body : JSON.stringify(body)
   };
 }
-var handler6 = async (event) => {
+var handler7 = async (event) => {
   const method = event.requestContext?.http?.method || event.httpMethod || "GET";
   const rawPath = event.rawPath || event.path || "/";
   const queryParams = event.queryStringParameters || {};
@@ -31026,12 +31094,16 @@ var handler6 = async (event) => {
       return response(200, tags);
     }
     if (rawPath === "/bot/todayinhistory") {
-      const result = await handler5(queryParams);
+      const result = await handler6(queryParams);
       return response(200, result);
     }
     const postMatch = rawPath.match(/^\/bot\/posts\/(.+)$/);
     if (postMatch) {
       const id = decodeURIComponent(postMatch[1]);
+      if (method === "PUT") {
+        const result2 = await handler4(id, event.body);
+        return response(200, result2);
+      }
       const result = await handler3(id);
       return response(200, result);
     }
@@ -31042,7 +31114,7 @@ var handler6 = async (event) => {
     const searchMatch = rawPath.match(/^\/bot\/search\/(.+)$/);
     if (searchMatch) {
       const term = decodeURIComponent(searchMatch[1]);
-      const result = await handler4(term, queryParams);
+      const result = await handler5(term, queryParams);
       return response(200, result);
     }
     return response(404, { error: "Not found" });
@@ -31052,5 +31124,5 @@ var handler6 = async (event) => {
   }
 };
 export {
-  handler6 as handler
+  handler7 as handler
 };

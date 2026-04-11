@@ -74,36 +74,46 @@ function getPosts(nav, tag, offset, month, day) {
 }
 
 function getPost(id) {
-	var endpoint= 'bot/posts/' + id;	
+	var endpoint= 'bot/posts/' + id;
 	console.log('Calling ' + endpoint);
-	
+
 	Auth.apiFetch(endpoint).then(function (json) {
 		console.log(json);
-	
+
 		$("#anchornext").addClass("d-none");
+		$("#anchorprevious").addClass("d-none");
 
 		var post = json.posts[0];
-		var isSingle = post && (post.video || post.items.length === 1);
+		if (!post) { removeSpinner(); return; }
+
+		var isSingle = post.video || post.items.length === 1;
 
 		if (isSingle) {
 			$('.thegrid').removeClass('row-cols-1 row-cols-md-2 row-cols-xxl-4');
-			$('.thegrid').addClass('justify-content-center');
-			$('.thegrid').css({ 'max-width': '600px', 'max-height': '800px' });
+			$('.thegrid').css({ 'max-width': '600px', 'margin': '0 auto' });
 		} else {
 			$('.thegrid').removeClass('row-cols-xxl-4');
 		}
 
 		$.each(json.posts, function(i, post) {
 			if (post.video)
-				addVideo(post);
+				addVideo(post, true);
 			else {
 				$.each(post.items, function(i, item) {
-					addPhoto(post,item);
+					addPhoto(post, item, true);
 				});
 			}
 		});
 
-    	formatGrid();
+		var postDate = getFormattedDate(post.postdate);
+		var editUrl = 'edit.html?post=' + encodeURIComponent(post.id);
+		$('.thegrid').before(
+			'<div class="post-single-meta text-center mt-3 mb-2">' +
+			'<a href="' + editUrl + '" class="post-title-edit-link">' + post.title + '</a>' +
+			'<div class="post-single-date">' + postDate + '</div>' +
+			'</div>'
+		);
+		formatGrid();
 	}).catch(function (err) {
       console.error('API error:', err);
       showError('getPost', err);
@@ -141,45 +151,48 @@ function searchPosts(searchterm, offset) {
     });
 }
 
-function addPhoto(post, item) {	
+function addPhoto(post, item, hideOverlay) {
 	var url = _config.s3.url + post.dir + '/' + item;
-	
 	var postDate = getFormattedDate(post.postdate);
-		
-	var html= 
+	var overlayHtml = hideOverlay ? '' :
+		`<div class="gallery-overlay rounded">
+			<div class="overlay-title">${post.title}</div>
+			<div class="overlay-date">${postDate}</div>
+		</div>`;
+
+	var html =
 		`<div class="grid-item col p-1 card border-0">
-			<a data-fancybox="gallery" data-caption="${post.title} ${postDate}"  href="${url}" data-post="${post.id}">
-				<img class="img-fluid rounded card-img" src="${url}" alt="" title=""/>			
-				<div class="gallery-overlay rounded">
-					<div class="overlay-title">${post.title}</div>
-					<div class="overlay-date">${postDate}</div>		
-				</div>
+			<a data-fancybox="gallery" data-caption="${post.title} ${postDate}" href="${url}" data-post="${post.id}">
+				<img class="img-fluid rounded card-img" src="${url}" alt="" title=""/>
+				${overlayHtml}
 			</a>
 		</div>
 		`;
 	$('.thegrid').append(html);
 }
 
-function addVideo(post) {	
+function addVideo(post, hideOverlay) {
 	var urlThumb = _config.s3.url + post.dir + '/' + post.thumb;
 	var urlVideo = _config.s3.url + post.video;
 	var postDate = getFormattedDate(post.postdate);
-	
-	var html = 	
+	var overlayHtml = hideOverlay ? '' :
+		`<div class="card-img-overlay d-flex flex-column justify-content-end">
+			<div class="gallery-overlay rounded">
+				<div class="overlay-title">${post.title}</div>
+				<div class="overlay-date">${postDate}</div>
+				<div class="bot-video-play"></div>
+			</div>
+		</div>`;
+
+	var html =
 		`<div class="grid-item col p-1 card border-0">
-			<a data-fancybox="gallery" data-caption="${post.title} ${postDate}"  href="${urlVideo}" data-post="${post.id}">	
-				<img class="img-fluid rounded card-img" src="${urlThumb}" alt="" title=""/>			
-				<div class="card-img-overlay d-flex flex-column justify-content-end">
-					<div class="gallery-overlay rounded">
-						<div class="overlay-title">${post.title}</div>
-						<div class="overlay-date">${postDate}</div>
-						<div class="bot-video-play"></div>		
-					</div>
-				</div>
+			<a data-fancybox="gallery" data-caption="${post.title} ${postDate}" href="${urlVideo}" data-post="${post.id}">
+				<img class="img-fluid rounded card-img" src="${urlThumb}" alt="" title=""/>
+				${overlayHtml}
 			</a>
 		</div>
 		`;
-	
+
 	$('.thegrid').append(html);
 }
 
@@ -203,7 +216,7 @@ function checkOffset(offset, total) {
 		$("#anchornext").addClass("d-none");
 }	
         
-function formatGrid() {
+function formatGrid(onComplete) {
 	$('.thegrid').masonry({
 		itemSelector: '.grid-item',
 		columnWidth: '.grid-item',
@@ -214,6 +227,7 @@ function formatGrid() {
 		$('.thegrid').masonry('reloadItems').masonry('layout');
 		removeSpinner();
 		Fancybox.bind('[data-fancybox]');
+		if (onComplete) onComplete();
 	});
 }
 

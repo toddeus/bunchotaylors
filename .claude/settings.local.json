@@ -11,7 +11,8 @@
       "Bash(cmd:*)",
       "Bash(powershell:*)",
       "Bash(npm install:*)",
-      "Bash(git remote:*)"
+      "Bash(git remote:*)",
+      "Bash(pip install:*)"
     ]
   }
 }

@@ -44,6 +44,8 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: bot-posts
+        - DynamoDBWritePolicy:
+            TableName: bot-posts
         - S3ReadPolicy:
             BucketName: bunch-o-taylors
       Events:

@@ -2,13 +2,14 @@ import { verifyToken } from './lib/auth.js';
 import { handler as tagsHandler } from './routes/tags.js';
 import { handler as postsHandler } from './routes/posts.js';
 import { handler as postHandler } from './routes/post.js';
+import { handler as postUpdateHandler } from './routes/post-update.js';
 import { handler as searchHandler } from './routes/search.js';
 import { handler as todayHandler } from './routes/todayinhistory.js';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
 };
 
 function response(statusCode, body, extraHeaders = {}) {
@@ -61,10 +62,14 @@ export const handler = async (event) => {
       return response(200, result);
     }
 
-    // GET /bot/posts/{id}  (must come before /bot/posts)
+    // GET or PUT /bot/posts/{id}  (must come before /bot/posts)
     const postMatch = rawPath.match(/^\/bot\/posts\/(.+)$/);
     if (postMatch) {
       const id = decodeURIComponent(postMatch[1]);
+      if (method === 'PUT') {
+        const result = await postUpdateHandler(id, event.body);
+        return response(200, result);
+      }
       const result = await postHandler(id);
       return response(200, result);
     }
