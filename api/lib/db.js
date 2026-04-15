@@ -141,6 +141,43 @@ export async function updatePost(id, fields) {
 }
 
 /**
+ * Query all posts for a given calendar year via DateIndex GSI, descending by postdate.
+ * Uses a BETWEEN condition on the sort key so only that year's items are read.
+ * @param {string|number} year - e.g. 2024
+ * @returns {Promise<object[]>}
+ */
+export async function queryByYear(year) {
+  const items = [];
+  let lastKey;
+
+  do {
+    const params = {
+      TableName: TABLE_NAME,
+      IndexName: 'DateIndex',
+      KeyConditionExpression: '#t = :type AND #d BETWEEN :start AND :end',
+      ExpressionAttributeNames: { '#t': '_type', '#d': 'postdate' },
+      ExpressionAttributeValues: {
+        ':type': 'POST',
+        ':start': `${year}-01-01`,
+        ':end':   `${year}-12-31`,
+      },
+      ScanIndexForward: false,
+    };
+    if (lastKey) {
+      params.ExclusiveStartKey = lastKey;
+    }
+
+    const result = await ddb.send(new QueryCommand(params));
+    if (result.Items) {
+      items.push(...result.Items);
+    }
+    lastKey = result.LastEvaluatedKey;
+  } while (lastKey);
+
+  return items;
+}
+
+/**
  * Query posts by monthday (MM-DD) via MonthDayIndex GSI, ascending by postdate.
  * @param {string} monthday - e.g. "04-02"
  * @returns {Promise<object[]>}

@@ -1,4 +1,4 @@
-import { scanAll, queryByDate } from '../lib/db.js';
+import { scanAll, queryByDate, queryByYear } from '../lib/db.js';
 
 const PAGE_SIZE = 10;
 const VIDEO_PAGE_SIZE = 20;
@@ -26,8 +26,21 @@ function shuffle(arr) {
  */
 export async function handler(queryParams) {
   const offset = parseInt(queryParams.offset || '0', 10);
-  const tag = queryParams.tag || null;
+  const tag    = queryParams.tag  || null;
   const random = queryParams.random === 'true';
+  const year   = queryParams.year || null;
+
+  // Mode 0: year={YYYY} — all posts for that calendar year, newest first
+  if (year) {
+    const items = await queryByYear(year);
+    return {
+      year:   parseInt(year, 10),
+      total:  items.length,
+      offset: 0,
+      tag:    null,
+      posts:  items,
+    };
+  }
 
   // Mode 1: random=true
   if (random) {

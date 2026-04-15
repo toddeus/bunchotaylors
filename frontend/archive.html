@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#5e72e4" />
+  <title>All Posts — Bunch-o-Taylors</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Bunch-o-Taylors" />
+  <link rel="apple-touch-icon" href="app-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <script src="js/jquery.stayInWebApp.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6/dist/amazon-cognito-identity.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      font-size: .875rem;
+      padding-bottom: 140px;
+    }
+
+    /* ── Fixed footer (decorative bar only on this page) ── */
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    /* ── Split controls ──────────────────────────── */
+    .split-search {
+      display: flex; align-items: stretch;
+      border: 1.5px solid #d0daea; border-radius: 8px; overflow: hidden;
+      background: #fff; transition: border-color .15s;
+    }
+    .split-search:focus-within { border-color: #90a8d8; }
+    .split-search:focus-within .split-label { color: #3f67c0; border-right-color: #90a8d8; }
+    .split-input {
+      border: none; outline: none; padding: 8px 12px;
+      font-family: 'Inter', sans-serif; font-size: .82rem; color: #1e3a5f;
+      background: #fff; width: 170px;
+    }
+    .split-control { position: relative; display: inline-block; }
+    .split-trigger {
+      display: flex; align-items: stretch;
+      border: 1.5px solid #d0daea; border-radius: 8px; overflow: hidden;
+      cursor: pointer; transition: border-color .15s; background: #fff;
+      user-select: none;
+    }
+    .split-trigger:hover,
+    .split-control.open .split-trigger { border-color: #90a8d8; }
+    .split-label {
+      background: #f8f9fc; padding: 0 12px;
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; color: #8898aa;
+      border-right: 1.5px solid #d0daea;
+      display: flex; align-items: center; white-space: nowrap;
+      transition: color .15s, border-color .15s;
+    }
+    .split-control.open .split-label { color: #3f67c0; border-right-color: #90a8d8; }
+    .split-value {
+      padding: 8px 26px 8px 12px; font-size: .82rem;
+      color: #1e3a5f; font-weight: 500; background: #fff;
+      min-width: 80px; display: flex; align-items: center;
+    }
+    .split-control.has-val .split-value { color: #3f67c0; font-weight: 600; }
+    .split-chevron {
+      position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+      color: #8898aa; font-size: .65rem; pointer-events: none;
+      transition: transform .18s;
+    }
+    .split-control.open .split-chevron { transform: translateY(-50%) rotate(180deg); }
+    .split-dropdown {
+      /* opens upward — footer bar is at the bottom */
+      position: absolute; bottom: calc(100% + 5px); top: auto; left: 0; min-width: 100%;
+      background: #fff; border: 1.5px solid #d0daea; border-radius: 8px;
+      box-shadow: 0 -8px 24px rgba(30,60,120,.1);
+      z-index: 100; display: none; overflow: hidden;
+      max-height: 260px; overflow-y: auto;
+    }
+    .split-control.open .split-dropdown { display: block; }
+    .split-opt {
+      padding: 8px 12px; cursor: pointer; font-size: .82rem; color: #1e3a5f;
+      transition: background .1s;
+    }
+    .split-opt:hover   { background: #f5f8ff; }
+    .split-opt.selected { background: #eef3ff; color: #3f67c0; font-weight: 600; }
+
+    /* ── Go button ───────────────────────────────── */
+    .go-btn {
+      padding: 7px 18px;
+      background: #3f67c0; color: #fff;
+      border: none; border-radius: 8px;
+      font-size: .82rem; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+    .go-btn:hover { background: #2c52a8; }
+
+    /* ── Timeline rail ──────────────────────────── */
+    .timeline-wrap { max-width: 820px; margin: 0 auto; padding: 24px 20px 20px; }
+
+    .tl-rail {
+      position: relative;
+      padding-left: 54px;
+    }
+    .tl-rail::before {
+      content: '';
+      position: absolute; left: 19px; top: 0; bottom: 0;
+      width: 3px; background: #dde6f5; border-radius: 2px;
+    }
+
+    /* ── Year ───────────────────────────────────── */
+    .tl-year { position: relative; margin-top: 28px; }
+    .tl-year:first-child { margin-top: 0; }
+
+    .tl-year-header {
+      position: relative;
+      display: flex; align-items: center; gap: 10px;
+      padding-bottom: 8px; margin-bottom: 6px;
+      border-bottom: 2px solid #dde6f5;
+      cursor: pointer; user-select: none;
+    }
+    .tl-year-header:hover .tl-year-dot { background: #1565c0; }
+
+    .tl-year-dot {
+      position: absolute; left: -43px;
+      top: 50%; transform: translateY(-50%);
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #1e88e5;
+      box-shadow: 0 2px 8px rgba(30,136,229,.35);
+      z-index: 1; flex-shrink: 0;
+      transition: background .15s;
+    }
+    .tl-year-label  { font-size: 1.35rem; font-weight: 800; color: #1e3a5f; line-height: 1.2; }
+    .tl-year-toggle { font-size: .75rem; color: #8898aa; margin-left: auto; }
+
+    /* ── Month ──────────────────────────────────── */
+    .tl-month { margin-bottom: 4px; position: relative; }
+    .tl-month-dot {
+      position: absolute; left: -38px; top: 7px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #fff; border: 3px solid #90a8d8; z-index: 1;
+    }
+    .tl-month-header {
+      font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .7px; color: #7a90b0;
+      padding: 6px 0 5px; margin-bottom: 3px;
+    }
+
+    /* ── Post row ───────────────────────────────── */
+    .tl-post {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 12px; margin-bottom: 3px;
+      background: #f2f6ff;
+      border-radius: 7px;
+      border: 1px solid #dce6f8;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    .tl-post:hover {
+      background: #e8f0fe; border-color: #a8c0ea;
+      box-shadow: 0 2px 8px rgba(63,103,192,.1);
+    }
+
+    .tl-date {
+      font-size: .76rem; color: #8898aa; min-width: 50px;
+      font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0;
+    }
+    .tl-title { flex: 1; }
+    .tl-title a { color: #3f67c0; text-decoration: none; font-size: .88rem; font-weight: 500; }
+    .tl-title a:hover { text-decoration: underline; }
+    .tl-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; flex-shrink: 0; }
+
+    .tag-pill {
+      font-size: .67rem; padding: 2px 8px; background: #e8eef8;
+      border-radius: 10px; color: #4a6fa5; white-space: nowrap;
+    }
+    .video-badge {
+      font-size: .65rem; padding: 2px 7px; background: #fff3cd;
+      border-radius: 10px; color: #856404; white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* ── Year loading / error states ────────────── */
+    .year-loader {
+      padding: 10px 0 6px; display: flex; align-items: center; gap: 8px;
+      color: #8898aa; font-size: .82rem;
+    }
+    .year-error {
+      padding: 8px 0; font-size: .82rem; color: #dc3545;
+    }
+    .year-error a { color: #dc3545; }
+    .year-empty {
+      padding: 8px 0; font-size: .82rem; color: #8898aa; font-style: italic;
+    }
+
+    /* ── Fixed search bar just above footer ─────── */
+    .search-footer {
+      position: fixed; bottom: 75px; left: 0; right: 0; z-index: 200;
+      background: #fff;
+      border-top: 2px solid #e3e8f0;
+      box-shadow: 0 -2px 12px rgba(0,0,0,.07);
+      padding: 10px 20px;
+      display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+    }
+
+    /* ── Search results header ───────────────────── */
+    .results-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0 8px;
+      font-size: .82rem; color: #8898aa;
+      border-bottom: 1px solid #dde6f5;
+      margin-bottom: 8px;
+    }
+    .results-header a {
+      color: #3f67c0; text-decoration: none; font-size: .8rem; margin-left: auto;
+    }
+    .results-header a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- Full-page spinner (visible until initial load completes) -->
+<aside id="spinner" class="position-fixed bg-body">
+  <div class="text-center">
+    <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
+    <p class="fw-medium fs-5 mt-3 text-muted">Loading posts...</p>
+  </div>
+</aside>
+
+<!-- Sticky banner -->
+<header class="sticky-top bg-body">
+  <nav class="navbar d-flex justify-content-center">
+    <a href="menu.html">
+      <img src="banner.png" class="img-fluid mx-auto" alt="Bunch-o-Taylors">
+    </a>
+  </nav>
+</header>
+
+<!-- Timeline content -->
+<main>
+  <div class="timeline-wrap">
+    <!-- Year-by-year timeline (lazy loaded) -->
+    <div class="tl-rail" id="timeline"></div>
+
+    <!-- Search/tag results (shown instead of timeline when a search is active) -->
+    <div id="searchResultsWrap" style="display:none">
+      <div class="tl-rail">
+        <div class="results-header">
+          <span id="resultsInfo"></span>
+          <a href="#" id="clearSearch">&#8592; Back to all posts</a>
+        </div>
+        <div id="resultsTimeline"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Fixed search/filter bar above footer -->
+<div class="search-footer">
+  <div class="split-search">
+    <div class="split-label">Search</div>
+    <input type="text" id="searchInput" class="split-input" placeholder="Titles...">
+  </div>
+  <div class="split-control" id="tagControl">
+    <div class="split-trigger" id="tagTrigger">
+      <div class="split-label">Tag</div>
+      <div class="split-value" id="tagValue">All</div>
+      <span class="split-chevron">&#9660;</span>
+    </div>
+    <div class="split-dropdown" id="tagDropdown"></div>
+  </div>
+  <button class="go-btn" id="goBtn">Go!</button>
+</div>
+
+<!-- Site footer — three-colour decorative bar (fixed to viewport bottom) -->
+<footer class="footer pt-2">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col bg-info-subtle"></div>
+      <div class="col bg-primary"></div>
+      <div class="col bg-info"></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── Config ───────────────────────────────────────────
+const ARCHIVE_START_YEAR = 2004;
+const CURRENT_YEAR       = new Date().getFullYear();
+const MONTHS = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December'
+];
+
+// ── State ────────────────────────────────────────────
+const yearState  = {};
+let   selectedTag = '';
+
+// ── Helpers ──────────────────────────────────────────
+function shortDate(dateStr) {
+  const [, m, d] = dateStr.split('-');
+  return `${MONTHS[parseInt(m, 10) - 1].slice(0, 3)} ${parseInt(d, 10)}`;
+}
+
+function escAttr(str) {
+  return str.replace(/"/g, '&quot;');
+}
+
+// ── Build skeleton year sections ─────────────────────
+function buildYearSections() {
+  const $tl = $('#timeline');
+
+  for (let year = CURRENT_YEAR; year >= ARCHIVE_START_YEAR; year--) {
+    const defaultOpen = year >= CURRENT_YEAR - 1;
+    yearState[year]   = { loaded: false, loading: false };
+
+    $tl.append(`
+      <div class="tl-year" id="tly-${year}" data-year="${year}">
+        <div class="tl-year-header" id="yh-${year}">
+          <div class="tl-year-dot"></div>
+          <span class="tl-year-label">${year}</span>
+          <span class="tl-year-toggle" id="ytog-${year}">${defaultOpen ? '&#9650;' : '&#9660;'}</span>
+        </div>
+        <div class="tl-year-body" id="yb-${year}" ${defaultOpen ? '' : 'style="display:none"'}></div>
+      </div>`);
+  }
+
+  // Toggle + lazy-load on header click
+  $(document).on('click', '.tl-year-header', function () {
+    const year    = parseInt($(this).closest('.tl-year').data('year'), 10);
+    const $body   = $(`#yb-${year}`);
+    const opening = $body.is(':hidden');
+
+    $body.toggle();
+    $(`#ytog-${year}`).html(opening ? '&#9650;' : '&#9660;');
+
+    if (opening && !yearState[year].loaded && !yearState[year].loading) {
+      loadYear(year);
+    }
+  });
+}
+
+// ── Render a loaded year's posts into the DOM ─────────
+function renderYear(year, posts) {
+  const $body = $(`#yb-${year}`);
+  $(`#yl-${year}`).remove();
+
+  if (!posts.length) {
+    $body.append('<div class="year-empty">No posts this year.</div>');
+    return;
+  }
+
+  const byMonth = {};
+  posts.forEach(p => {
+    const mo = p.postdate.split('-')[1];
+    (byMonth[mo] = byMonth[mo] || []).push(p);
+  });
+
+  Object.keys(byMonth).sort((a, b) => b - a).forEach(mo => {
+    const monthName = MONTHS[parseInt(mo, 10) - 1];
+    const ym        = `${year}-${mo}`;
+    const $section  = $(`
+      <div class="tl-month" id="tlm-${ym}" data-ym="${ym}">
+        <div class="tl-month-dot"></div>
+        <div class="tl-month-header">${monthName}</div>
+      </div>`);
+
+    byMonth[mo].forEach(post => {
+      const tags    = [post.tag1, post.tag2, post.tag3].filter(Boolean);
+      const tagHtml = tags.map(t => `<span class="tag-pill">${t}</span>`).join('');
+      const vidHtml = post.video ? '<span class="video-badge">&#9654; video</span>' : '';
+
+      $section.append(`
+        <div class="tl-post">
+          <span class="tl-date">${shortDate(post.postdate)}</span>
+          <span class="tl-title">
+            <a href="index.html?post=${encodeURIComponent(post.id)}">${post.title}</a>
+          </span>
+          <span class="tl-tags">${vidHtml}${tagHtml}</span>
+        </div>`);
+    });
+
+    $body.append($section);
+  });
+}
+
+// ── Fetch one year from the API ───────────────────────
+async function loadYear(year) {
+  if (yearState[year].loading) return;
+  yearState[year].loading = true;
+
+  $(`#yb-${year}`).append(`
+    <div class="year-loader" id="yl-${year}">
+      <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+      <span>Loading ${year}...</span>
+    </div>`);
+
+  try {
+    const result = await Auth.apiFetch('bot/posts?year=' + year);
+    yearState[year].loaded  = true;
+    yearState[year].loading = false;
+    renderYear(year, result.posts || []);
+  } catch (err) {
+    yearState[year].loading = false;
+    $(`#yl-${year}`).replaceWith(`
+      <div class="year-error" id="yl-${year}">
+        Failed to load.
+        <a href="#" class="retry-year" data-year="${year}">Retry</a>
+      </div>`);
+    console.error(`Failed to load year ${year}:`, err);
+  }
+}
+
+// ── Retry handler ─────────────────────────────────────
+$(document).on('click', '.retry-year', function (e) {
+  e.preventDefault();
+  const year = parseInt($(this).data('year'), 10);
+  $(`#yl-${year}`).remove();
+  yearState[year].loading = false;
+  loadYear(year);
+});
+
+// ── Tag picklist ──────────────────────────────────────
+async function initTags() {
+  try {
+    const tags = await Auth.apiFetch('bot/tags');
+    const $dd  = $('#tagDropdown');
+    $dd.append(`<div class="split-opt selected" data-tag="" data-display="All">All</div>`);
+    tags.forEach(t => {
+      $dd.append(`<div class="split-opt" data-tag="${escAttr(t.toLowerCase())}" data-display="${escAttr(t)}">${t}</div>`);
+    });
+  } catch (err) {
+    console.error('Failed to load tags:', err);
+  }
+}
+
+$('#tagTrigger').on('click', function (e) {
+  e.stopPropagation();
+  $('#tagControl').toggleClass('open');
+});
+
+$(document).on('click', function () {
+  $('#tagControl').removeClass('open');
+});
+$('#tagControl').on('click', function (e) { e.stopPropagation(); });
+
+$('#tagDropdown').on('click', '.split-opt', function (e) {
+  e.stopPropagation();
+  selectedTag = $(this).data('tag');
+  $('#tagDropdown .split-opt').removeClass('selected');
+  $(this).addClass('selected');
+  $('#tagValue').text($(this).data('display') || 'All');
+  $('#tagControl').removeClass('open').toggleClass('has-val', !!selectedTag);
+});
+
+// ── API search helpers ────────────────────────────────
+async function fetchAllResults(path) {
+  const all = [];
+  let offset = 0;
+  let total;
+  do {
+    const sep    = path.includes('?') ? '&' : '?';
+    const result = await Auth.apiFetch(`${path}${sep}offset=${offset}`);
+    all.push(...result.posts);
+    total  = result.total;
+    offset = all.length;
+    if (!result.posts.length) break; // safety
+  } while (all.length < total);
+  return all;
+}
+
+function renderResults(posts) {
+  const $target = $('#resultsTimeline').empty();
+
+  if (!posts.length) {
+    $target.append('<div class="year-empty" style="padding:20px 0">No results found.</div>');
+    return;
+  }
+
+  // Group by year then month
+  const byYear = {};
+  posts.forEach(p => {
+    const [yr, mo] = p.postdate.split('-');
+    if (!byYear[yr])     byYear[yr]     = {};
+    if (!byYear[yr][mo]) byYear[yr][mo] = [];
+    byYear[yr][mo].push(p);
+  });
+
+  Object.keys(byYear).sort((a, b) => b - a).forEach(yr => {
+    const $yr   = $(`
+      <div class="tl-year">
+        <div class="tl-year-header" style="cursor:default">
+          <div class="tl-year-dot"></div>
+          <span class="tl-year-label">${yr}</span>
+        </div>
+        <div class="tl-year-body" id="sr-yb-${yr}"></div>
+      </div>`);
+    const $body = $yr.find(`#sr-yb-${yr}`);
+
+    Object.keys(byYear[yr]).sort((a, b) => b - a).forEach(mo => {
+      const monthName = MONTHS[parseInt(mo, 10) - 1];
+      const $section  = $(`
+        <div class="tl-month">
+          <div class="tl-month-dot"></div>
+          <div class="tl-month-header">${monthName}</div>
+        </div>`);
+
+      byYear[yr][mo].forEach(post => {
+        const tags    = [post.tag1, post.tag2, post.tag3].filter(Boolean);
+        const tagHtml = tags.map(t => `<span class="tag-pill">${t}</span>`).join('');
+        const vidHtml = post.video ? '<span class="video-badge">&#9654; video</span>' : '';
+
+        $section.append(`
+          <div class="tl-post">
+            <span class="tl-date">${shortDate(post.postdate)}</span>
+            <span class="tl-title">
+              <a href="index.html?post=${encodeURIComponent(post.id)}">${post.title}</a>
+            </span>
+            <span class="tl-tags">${vidHtml}${tagHtml}</span>
+          </div>`);
+      });
+
+      $body.append($section);
+    });
+
+    $target.append($yr);
+  });
+}
+
+async function doSearch() {
+  const searchTerm = $('#searchInput').val().trim();
+  const tag        = selectedTag;
+
+  if (!searchTerm && !tag) {
+    clearSearch();
+    return;
+  }
+
+  // Switch to results view with loading state
+  $('#timeline').hide();
+  $('#searchResultsWrap').show();
+  $('#resultsInfo').html('<span class="spinner-border spinner-border-sm text-primary me-2" role="status"></span>Searching...');
+  $('#resultsTimeline').empty();
+
+  try {
+    let posts;
+
+    if (searchTerm && tag) {
+      // Search API doesn't support combined query — fetch by search, filter by tag client-side
+      posts = await fetchAllResults('bot/search/' + encodeURIComponent(searchTerm));
+      const tagLower = tag.toLowerCase();
+      posts = posts.filter(p =>
+        [p.tag1, p.tag2, p.tag3].some(t => t && t.toLowerCase() === tagLower)
+      );
+    } else if (searchTerm) {
+      posts = await fetchAllResults('bot/search/' + encodeURIComponent(searchTerm));
+    } else {
+      posts = await fetchAllResults('bot/posts?tag=' + encodeURIComponent(tag));
+    }
+
+    const parts = [];
+    if (searchTerm) parts.push(`"${searchTerm}"`);
+    if (tag) parts.push(`tag: ${tag}`);
+    $('#resultsInfo').text(`${posts.length} result${posts.length !== 1 ? 's' : ''} for ${parts.join(', ')}`);
+
+    renderResults(posts);
+  } catch (err) {
+    $('#resultsInfo').text('Search failed.');
+    console.error('Search failed:', err);
+  }
+}
+
+function clearSearch() {
+  $('#searchResultsWrap').hide();
+  $('#timeline').show();
+}
+
+$('#goBtn').on('click', doSearch);
+$('#searchInput').on('keydown', function (e) {
+  if (e.key === 'Enter') doSearch();
+});
+$(document).on('click', '#clearSearch', function (e) {
+  e.preventDefault();
+  clearSearch();
+});
+
+// ── Init ──────────────────────────────────────────────
+$(document).ready(async function () {
+  $.stayInWebApp();
+
+  buildYearSections();
+
+  await Promise.all([
+    initTags(),
+    loadYear(CURRENT_YEAR),
+    loadYear(CURRENT_YEAR - 1),
+  ]);
+
+  $('#spinner').addClass('d-none');
+});
+</script>
+</body>
+</html>

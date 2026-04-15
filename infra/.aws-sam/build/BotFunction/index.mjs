@@ -30856,6 +30856,33 @@ async function updatePost(id, fields) {
   await ddb.send(new import_lib_dynamodb.UpdateCommand(params));
   return getById(id);
 }
+async function queryByYear(year2) {
+  const items = [];
+  let lastKey;
+  do {
+    const params = {
+      TableName: TABLE_NAME,
+      IndexName: "DateIndex",
+      KeyConditionExpression: "#t = :type AND #d BETWEEN :start AND :end",
+      ExpressionAttributeNames: { "#t": "_type", "#d": "postdate" },
+      ExpressionAttributeValues: {
+        ":type": "POST",
+        ":start": `${year2}-01-01`,
+        ":end": `${year2}-12-31`
+      },
+      ScanIndexForward: false
+    };
+    if (lastKey) {
+      params.ExclusiveStartKey = lastKey;
+    }
+    const result = await ddb.send(new import_lib_dynamodb.QueryCommand(params));
+    if (result.Items) {
+      items.push(...result.Items);
+    }
+    lastKey = result.LastEvaluatedKey;
+  } while (lastKey);
+  return items;
+}
 async function queryByMonthDay(monthday) {
   const items = [];
   let lastKey;
@@ -30909,6 +30936,17 @@ async function handler2(queryParams) {
   const offset = parseInt(queryParams.offset || "0", 10);
   const tag2 = queryParams.tag || null;
   const random = queryParams.random === "true";
+  const year2 = queryParams.year || null;
+  if (year2) {
+    const items = await queryByYear(year2);
+    return {
+      year: parseInt(year2, 10),
+      total: items.length,
+      offset: 0,
+      tag: null,
+      posts: items
+    };
+  }
   if (random) {
     const allItems2 = await scanAll();
     shuffle(allItems2);
