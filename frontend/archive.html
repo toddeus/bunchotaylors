@@ -330,7 +330,7 @@ function buildYearSections() {
         <div class="tl-year-header" id="yh-${year}">
           <div class="tl-year-dot"></div>
           <span class="tl-year-label">${year}</span>
-          <span class="tl-year-toggle" id="ytog-${year}">${defaultOpen ? '&#9650;' : '&#9660;'}</span>
+          <span class="tl-year-toggle" id="ytog-${year}"></span>
         </div>
         <div class="tl-year-body" id="yb-${year}" ${defaultOpen ? '' : 'style="display:none"'}></div>
       </div>`);
@@ -343,7 +343,7 @@ function buildYearSections() {
     const opening = $body.is(':hidden');
 
     $body.toggle();
-    $(`#ytog-${year}`).html(opening ? '&#9650;' : '&#9660;');
+    $(`#ytog-${year}`).html('');
 
     if (opening && !yearState[year].loaded && !yearState[year].loading) {
       loadYear(year);
