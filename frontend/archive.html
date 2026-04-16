@@ -186,10 +186,6 @@
       font-size: .67rem; padding: 2px 8px; background: #e8eef8;
       border-radius: 10px; color: #4a6fa5; white-space: nowrap;
     }
-    .video-badge {
-      font-size: .65rem; padding: 2px 7px; background: #fff3cd;
-      border-radius: 10px; color: #856404; white-space: nowrap; flex-shrink: 0;
-    }
 
     /* ── Year loading / error states ────────────── */
     .year-loader {
@@ -379,7 +375,6 @@ function renderYear(year, posts) {
     byMonth[mo].forEach(post => {
       const tags    = [post.tag1, post.tag2, post.tag3].filter(Boolean);
       const tagHtml = tags.map(t => `<span class="tag-pill">${t}</span>`).join('');
-      const vidHtml = post.video ? '<span class="video-badge">&#9654; video</span>' : '';
 
       $section.append(`
         <div class="tl-post">
@@ -387,7 +382,7 @@ function renderYear(year, posts) {
           <span class="tl-title">
             <a href="index.html?post=${encodeURIComponent(post.id)}">${post.title}</a>
           </span>
-          <span class="tl-tags">${vidHtml}${tagHtml}</span>
+          <span class="tl-tags">${tagHtml}</span>
         </div>`);
     });
 
@@ -519,7 +514,6 @@ function renderResults(posts) {
       byYear[yr][mo].forEach(post => {
         const tags    = [post.tag1, post.tag2, post.tag3].filter(Boolean);
         const tagHtml = tags.map(t => `<span class="tag-pill">${t}</span>`).join('');
-        const vidHtml = post.video ? '<span class="video-badge">&#9654; video</span>' : '';
 
         $section.append(`
           <div class="tl-post">
@@ -527,7 +521,7 @@ function renderResults(posts) {
             <span class="tl-title">
               <a href="index.html?post=${encodeURIComponent(post.id)}">${post.title}</a>
             </span>
-            <span class="tl-tags">${vidHtml}${tagHtml}</span>
+            <span class="tl-tags">${tagHtml}</span>
           </div>`);
       });
 
