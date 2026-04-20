@@ -35,6 +35,12 @@
       bottom: 0;
       left: 0;
       right: 0;
+      z-index: 1025;
+    }
+
+    /* ── Sticky header above all scrolling content ── */
+    header.sticky-top {
+      z-index: 1030;
     }
 
     /* ── Split controls ──────────────────────────── */
@@ -202,7 +208,7 @@
 
     /* ── Fixed search bar just above footer ─────── */
     .search-footer {
-      position: fixed; bottom: 75px; left: 0; right: 0; z-index: 200;
+      position: fixed; bottom: 75px; left: 0; right: 0; z-index: 1026;
       background: #fff;
       border-top: 2px solid #e3e8f0;
       box-shadow: 0 -2px 12px rgba(0,0,0,.07);
@@ -229,8 +235,8 @@
 <!-- Full-page spinner (visible until initial load completes) -->
 <aside id="spinner" class="position-fixed bg-body">
   <div class="text-center">
-    <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
-    <p class="fw-medium fs-5 mt-3 text-muted">Loading posts...</p>
+    <div class="spinner-border" role="status" style="width:3rem;height:3rem;"></div>
+    <p class="fw-medium fs-3" id="loadingMessage">Loading......</p>
   </div>
 </aside>
 
@@ -592,6 +598,11 @@ $(document).on('click', '#clearSearch', function (e) {
 // ── Init ──────────────────────────────────────────────
 $(document).ready(async function () {
   $.stayInWebApp();
+
+  $.getJSON('js/loading-messages.json', function (data) {
+    const msgs = data.messages;
+    $('#loadingMessage').text(msgs[Math.floor(Math.random() * msgs.length)]);
+  });
 
   buildYearSections();
 
