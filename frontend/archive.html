@@ -53,8 +53,11 @@
     .split-search:focus-within .split-label { color: #3f67c0; border-right-color: #90a8d8; }
     .split-input {
       border: none; outline: none; padding: 8px 12px;
-      font-family: 'Inter', sans-serif; font-size: .82rem; color: #1e3a5f;
+      font-family: 'Inter', sans-serif; font-size: 1rem; color: #1e3a5f;
       background: #fff; width: 170px;
+    }
+    @media (min-width: 576px) {
+      .split-input { font-size: .82rem; }
     }
     .split-control { position: relative; display: inline-block; }
     .split-trigger {
@@ -185,7 +188,7 @@
     }
     .tl-date a { color: #3f67c0; text-decoration: none; font-size: .88rem; font-weight: 500; }
     .tl-date a:hover { text-decoration: underline; }
-    .tl-title { flex: 1; }
+    .tl-title { flex: 1; min-width: 0; overflow: hidden; }
     .tl-title a { color: #3f67c0; text-decoration: none; font-size: .88rem; font-weight: 500; }
     .tl-title a:hover { text-decoration: underline; }
     .tl-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; flex-shrink: 0; }
@@ -253,7 +256,7 @@
 
 <!-- Timeline content -->
 <main>
-  <div class="timeline-wrap">
+  <div class="timeline-wrap overflow-hidden">
     <!-- Year-by-year timeline (lazy loaded) -->
     <div class="tl-rail" id="timeline"></div>
 
