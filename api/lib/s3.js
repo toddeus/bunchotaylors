@@ -1,4 +1,5 @@
-import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { S3Client, ListObjectsV2Command, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const BUCKET = process.env.S3_BUCKET;
 const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic']);
@@ -103,4 +104,16 @@ export async function listAllPhotoKeys(prefix) {
   } while (continuationToken);
 
   return keys;
+}
+
+/**
+ * Generate a presigned PUT URL for uploading a file directly to S3 from the browser.
+ * @param {string} key - full S3 key (path + filename)
+ * @param {string} contentType - MIME type of the file
+ * @param {number} expiresIn - seconds until URL expires (default 300)
+ * @returns {Promise<string>} presigned URL
+ */
+export async function getPresignedPutUrl(key, contentType, expiresIn = 300) {
+  const command = new PutObjectCommand({ Bucket: BUCKET, Key: key, ContentType: contentType });
+  return getSignedUrl(s3, command, { expiresIn });
 }

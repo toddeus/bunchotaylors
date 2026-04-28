@@ -20,6 +20,7 @@ function updateMenu(tags) {
 	for (var tag of tags) {
 		html += '<h2 class="d-flex justify-content-center"><a href="index.html?nav=posts&tag='+ tag + '">'+ tag + '</a></h2>';
 	}
+	html += '<h2 class="d-flex justify-content-center mt-4"><a href="edit.html">add post</a></h2>';
 	html += '<h2 class="d-flex justify-content-center mt-4"><a href="#" onclick="Auth.signOut();return false;">sign out</a></h2>';
 
 	$('#menu h2:last').after(html);
@@ -186,7 +187,7 @@ function addVideo(post, hideOverlay) {
 
 	var html =
 		`<div class="grid-item col p-1 card border-0">
-			<a data-fancybox="gallery" data-caption="${post.title} ${postDate}" href="${urlVideo}" data-post="${post.id}">
+			<a data-fancybox="gallery" data-type="html5video" data-caption="${post.title} ${postDate}" href="${urlVideo}" data-post="${post.id}">
 				<img class="img-fluid rounded card-img" src="${urlThumb}" alt="" title=""/>
 				${overlayHtml}
 			</a>

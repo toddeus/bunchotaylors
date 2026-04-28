@@ -3,13 +3,15 @@ import { handler as tagsHandler } from './routes/tags.js';
 import { handler as postsHandler } from './routes/posts.js';
 import { handler as postHandler } from './routes/post.js';
 import { handler as postUpdateHandler } from './routes/post-update.js';
+import { handler as postCreateHandler } from './routes/post-create.js';
+import { handler as presignHandler } from './routes/presign.js';
 import { handler as searchHandler } from './routes/search.js';
 import { handler as todayHandler } from './routes/todayinhistory.js';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-  'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
 };
 
 function response(statusCode, body, extraHeaders = {}) {
@@ -74,9 +76,19 @@ export const handler = async (event) => {
       return response(200, result);
     }
 
-    // GET /bot/posts
+    // POST /bot/posts (create) or GET /bot/posts (list)
     if (rawPath === '/bot/posts') {
+      if (method === 'POST') {
+        const result = await postCreateHandler(event.body);
+        return response(201, result);
+      }
       const result = await postsHandler(queryParams);
+      return response(200, result);
+    }
+
+    // POST /bot/presign
+    if (rawPath === '/bot/presign' && method === 'POST') {
+      const result = await presignHandler(event.body);
       return response(200, result);
     }
 

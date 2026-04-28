@@ -4,6 +4,7 @@ import {
   ScanCommand,
   GetCommand,
   QueryCommand,
+  PutCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 
@@ -175,6 +176,35 @@ export async function queryByYear(year) {
   } while (lastKey);
 
   return items;
+}
+
+/**
+ * Scan all posts to find the current maximum numeric id, then return max+1 as a string.
+ * Single-user app; no concurrency risk.
+ * @returns {Promise<string>}
+ */
+export async function nextPostId() {
+  const items = await scanAll();
+  let max = 0;
+  for (const item of items) {
+    const n = parseInt(item.id, 10);
+    if (!isNaN(n) && n > max) max = n;
+  }
+  return String(max + 1);
+}
+
+/**
+ * Insert a new post. Fails if an item with the same id already exists.
+ * @param {object} post - fully-formed post item (must include id, _type, postdate, monthday)
+ * @returns {Promise<object>} the post as written
+ */
+export async function createPost(post) {
+  await ddb.send(new PutCommand({
+    TableName: TABLE_NAME,
+    Item: post,
+    ConditionExpression: 'attribute_not_exists(id)',
+  }));
+  return post;
 }
 
 /**

@@ -48,6 +48,8 @@ Resources:
             TableName: bot-posts
         - S3ReadPolicy:
             BucketName: bunch-o-taylors
+        - S3WritePolicy:
+            BucketName: bunch-o-taylors
       Events:
         ProxyRoute:
           Type: HttpApi
