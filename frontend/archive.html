@@ -28,7 +28,7 @@
       font-size: .875rem;
       padding-bottom: 140px;
     }
-
+	
     /* ── Fixed footer (decorative bar only on this page) ── */
     .footer {
       position: fixed;
@@ -180,9 +180,11 @@
     }
 
     .tl-date {
-      font-size: .76rem; color: #8898aa; min-width: 50px;
+      font-size: .76rem; min-width: 50px;
       font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0;
     }
+    .tl-date a { color: #3f67c0; text-decoration: none; font-size: .88rem; font-weight: 500; }
+    .tl-date a:hover { text-decoration: underline; }
     .tl-title { flex: 1; }
     .tl-title a { color: #3f67c0; text-decoration: none; font-size: .88rem; font-weight: 500; }
     .tl-title a:hover { text-decoration: underline; }
@@ -315,6 +317,11 @@ function shortDate(dateStr) {
   return `${MONTHS[parseInt(m, 10) - 1].slice(0, 3)} ${parseInt(d, 10)}`;
 }
 
+function memoriesUrl(dateStr) {
+  const [, m, d] = dateStr.split('-');
+  return `index.html?nav=memories&month=${parseInt(m, 10)}&day=${parseInt(d, 10)}`;
+}
+
 function escAttr(str) {
   return str.replace(/"/g, '&quot;');
 }
@@ -384,7 +391,7 @@ function renderYear(year, posts) {
 
       $section.append(`
         <div class="tl-post">
-          <span class="tl-date">${shortDate(post.postdate)}</span>
+          <span class="tl-date"><a href="${memoriesUrl(post.postdate)}">${shortDate(post.postdate)}</a></span>
           <span class="tl-title">
             <a href="index.html?post=${encodeURIComponent(post.id)}">${post.title}</a>
           </span>
@@ -523,7 +530,7 @@ function renderResults(posts) {
 
         $section.append(`
           <div class="tl-post">
-            <span class="tl-date">${shortDate(post.postdate)}</span>
+            <span class="tl-date"><a href="${memoriesUrl(post.postdate)}">${shortDate(post.postdate)}</a></span>
             <span class="tl-title">
               <a href="index.html?post=${encodeURIComponent(post.id)}">${post.title}</a>
             </span>
