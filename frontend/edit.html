@@ -8,14 +8,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6/dist/amazon-cognito-identity.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/exifr@7/dist/lite.umd.cjs"></script>
+  <script src="https://unpkg.com/exifr@7/dist/lite.umd.cjs"></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; }
     .type-btn {
@@ -108,7 +110,7 @@
           </div>
         </div>
 
-        <div class="row g-2 mb-3">
+        <div class="row g-2 mb-2">
           <div class="col">
             <label for="f-lat" class="form-label fw-semibold">Latitude</label>
             <input type="number" step="any" id="f-lat" class="form-control" placeholder="e.g. 40.7128" />
@@ -117,7 +119,11 @@
             <label for="f-lon" class="form-label fw-semibold">Longitude</label>
             <input type="number" step="any" id="f-lon" class="form-control" placeholder="e.g. -74.0060" />
           </div>
+          <div class="col-auto d-flex align-items-end">
+            <button type="button" id="btn-pick-map" class="btn btn-outline-secondary">Pick on Map</button>
+          </div>
         </div>
+        <div id="location-map" style="height:260px;display:none;border-radius:8px;" class="mb-3"></div>
 
         <!-- Edit mode: existing photo grid -->
         <div class="mb-4" id="items-section" style="display:none">
@@ -168,6 +174,8 @@ const MAX_W = 1600, MAX_H = 1400;
 let addType = null;       // 'photo' | 'video'  (add mode only)
 let thumbFileExt = '.png';
 let videoFileExt = '.mp4';
+let leafletMap = null;
+let leafletMarker = null;
 
 // ── Helpers ──────────────────────────────────────────────
 function escAttr(str) {
@@ -202,6 +210,49 @@ function setSpinner(msg) {
 
 function hideSpinner() {
   $('#spinner').addClass('d-none');
+}
+
+// ── Map ───────────────────────────────────────────────────
+function showMap(lat, lon) {
+  $('#location-map').show();
+  if (!leafletMap) {
+    leafletMap = L.map('location-map').setView([lat, lon], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(leafletMap);
+    leafletMarker = L.marker([lat, lon], { draggable: true }).addTo(leafletMap);
+    leafletMarker.on('dragend', function () {
+      const pos = leafletMarker.getLatLng();
+      $('#f-lat').val(pos.lat.toFixed(6));
+      $('#f-lon').val(pos.lng.toFixed(6));
+    });
+    leafletMap.on('click', function (e) {
+      leafletMarker.setLatLng(e.latlng);
+      $('#f-lat').val(e.latlng.lat.toFixed(6));
+      $('#f-lon').val(e.latlng.lng.toFixed(6));
+    });
+  } else {
+    leafletMap.setView([lat, lon], leafletMap.getZoom());
+    leafletMarker.setLatLng([lat, lon]);
+  }
+  setTimeout(function () { leafletMap.invalidateSize(); }, 50);
+}
+
+async function detectGpsFromFiles(files) {
+  for (const file of files) {
+    try {
+      const tags = await exifr.parse(file, { gps: true });
+      if (tags && tags.latitude != null && tags.longitude != null) {
+        $('#f-lat').val(tags.latitude.toFixed(6));
+        $('#f-lon').val(tags.longitude.toFixed(6));
+        showMap(tags.latitude, tags.longitude);
+        break;
+      }
+    } catch (e) {
+      console.error('GPS detection failed:', e);
+    }
+  }
 }
 
 // ── Field auto-derivation (add mode) ─────────────────────
@@ -384,6 +435,24 @@ function selectAddType(type) {
         '</div>'
       );
     });
+    detectGpsFromFiles(files);
+
+    if (files.length > 0) {
+      try {
+        exifr.parse(files[0], { exif: true }).then(function (tags) {
+          const raw = tags && (tags.DateTimeOriginal || tags.DateTime || tags.CreateDate);
+          if (!raw) { console.warn('No date tag found in EXIF'); return; }
+          const d = raw instanceof Date ? raw
+            : new Date(String(raw).replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3'));
+          if (isNaN(d.getTime())) { console.warn('Could not parse EXIF date:', raw); return; }
+          const iso = d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+          $('#f-postdate').val(iso);
+          deriveAddFields();
+        }).catch(function (e) { console.error('Date detection failed:', e); });
+      } catch (e) { console.error('Date detection failed:', e); }
+    }
   });
 
   // Submit
@@ -531,6 +600,10 @@ function initEditMode(postId) {
     renderItems();
     $('#editForm').show();
     hideSpinner();
+
+    if (post.location && post.location.lat != null && post.location.lon != null) {
+      showMap(post.location.lat, post.location.lon);
+    }
   }).catch(function (err) {
     showError('Failed to load post: ' + err.message);
     hideSpinner();
@@ -605,6 +678,30 @@ function initEditMode(postId) {
 
 // ── Bootstrap ─────────────────────────────────────────────
 $(document).ready(function () {
+  $('#btn-pick-map').on('click', function () {
+    const lat = parseFloat($('#f-lat').val());
+    const lon = parseFloat($('#f-lon').val());
+    if (!isNaN(lat) && !isNaN(lon)) {
+      showMap(lat, lon);
+    } else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function (pos) { showMap(pos.coords.latitude, pos.coords.longitude); },
+        function ()    { showMap(39.8283, -98.5795); }
+      );
+    } else {
+      showMap(39.8283, -98.5795);
+    }
+  });
+
+  $('#f-lat, #f-lon').on('change', function () {
+    const lat = parseFloat($('#f-lat').val());
+    const lon = parseFloat($('#f-lon').val());
+    if (!isNaN(lat) && !isNaN(lon) && leafletMap) {
+      leafletMarker.setLatLng([lat, lon]);
+      leafletMap.setView([lat, lon], leafletMap.getZoom());
+    }
+  });
+
   Auth.restoreSession().then(function (valid) {
     if (!valid) {
       window.location.href = 'signin.html?ref=' + encodeURIComponent(window.location.href);

@@ -13,14 +13,9 @@
 
 - Allow new photos to be added.
 
-### Add Post Location
+### Location Viewer HTML
 
-- Detect the photo/video location by reading the content's metadata and set the "Location" property when adding.
-- Use the closet location for multiple photos. Or use the first location found if unable to calculate closest.
-- There is existing logic for this in the local admin upload tool located at `C:\dev\eclipse_workspaces\sts5\bunchotaylors-admin`
-- I'd also like to add this to the Edit post for existing. Perhaps a button can be added to detect location? I would like to brainstorm how to do this with you.
-
-### Location Viewer
+### Location Viewer Historical Updates
 
 ### Tag cloud
 

@@ -12,7 +12,9 @@
       "Bash(powershell:*)",
       "Bash(npm install:*)",
       "Bash(git remote:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(grep -E \"\\\\.\\(html|htm\\)$\")",
+      "Bash(xargs grep *)"
     ]
   }
 }
