@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Play Button Options</title>
+  <style>
+    body { background: #222; font-family: sans-serif; color: #fff; padding: 40px; }
+    .row { display: flex; gap: 48px; flex-wrap: wrap; margin-bottom: 48px; }
+    .option { text-align: center; }
+    .option p { margin: 12px 0 4px; font-size: 14px; color: #aaa; }
+    /* simulate the thumbnail background */
+    .thumb {
+      width: 300px; height: 200px;
+      background: #555 url('https://via.placeholder.com/300x200/446/aaf?text=thumbnail') center/cover;
+      position: relative;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    svg { display: block; }
+  </style>
+</head>
+<body>
+  <h2>Play Button Options — shown at 64px on a simulated thumbnail</h2>
+  <div class="row">
+
+    <!-- Option 1: Solid white circle, dark triangle -->
+    <div class="option">
+      <div class="thumb">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="30" fill="white" opacity="0.9"/>
+          <polygon points="25,18 50,32 25,46" fill="#333"/>
+        </svg>
+      </div>
+      <p>1 — Solid white circle / dark triangle</p>
+    </div>
+
+    <!-- Option 2: Semi-transparent dark circle, white triangle -->
+    <div class="option">
+      <div class="thumb">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="30" fill="rgba(0,0,0,0.55)"/>
+          <polygon points="25,18 50,32 25,46" fill="white"/>
+        </svg>
+      </div>
+      <p>2 — Dark translucent circle / white triangle</p>
+    </div>
+
+    <!-- Option 3: White outline circle, white triangle -->
+    <div class="option">
+      <div class="thumb">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="29" fill="none" stroke="white" stroke-width="3" opacity="0.9"/>
+          <polygon points="25,18 50,32 25,46" fill="white" opacity="0.9"/>
+        </svg>
+      </div>
+      <p>3 — White outline circle / white triangle</p>
+    </div>
+
+    <!-- Option 4: Rounded rect badge (YouTube-style) -->
+    <div class="option">
+      <div class="thumb">
+        <svg width="80" height="56" viewBox="0 0 80 56">
+          <rect x="2" y="2" width="76" height="52" rx="12" ry="12" fill="rgba(0,0,0,0.65)"/>
+          <polygon points="30,14 58,28 30,42" fill="white"/>
+        </svg>
+      </div>
+      <p>4 — Rounded rect badge</p>
+    </div>
+
+    <!-- Option 5: Drop-shadow white triangle, no circle -->
+    <div class="option">
+      <div class="thumb">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <filter id="shadow">
+            <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="rgba(0,0,0,0.7)"/>
+          </filter>
+          <polygon points="18,10 58,32 18,54" fill="white" filter="url(#shadow)"/>
+        </svg>
+      </div>
+      <p>5 — Bare white triangle with drop shadow</p>
+    </div>
+
+  </div>
+
+  <p style="color:#666; font-size:12px;">Open this file in a browser: frontend/playbutton-preview.html</p>
+</body>
+</html>

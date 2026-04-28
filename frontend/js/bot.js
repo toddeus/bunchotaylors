@@ -176,12 +176,23 @@ function addVideo(post, hideOverlay) {
 	var urlThumb = _config.s3.url + post.dir + '/' + post.thumb;
 	var urlVideo = _config.s3.url + post.video;
 	var postDate = getFormattedDate(post.postdate);
-	var overlayHtml = hideOverlay ? '' :
+	var playSvgLarge = `<svg width="64" height="64" viewBox="0 0 64 64">
+		<circle cx="32" cy="32" r="29" fill="none" stroke="white" stroke-width="3" opacity="0.9"/>
+		<polygon points="25,18 50,32 25,46" fill="white" opacity="0.9"/>
+	</svg>`;
+	var playSvgSmall = `<svg style="display:block;margin-top:-25px;margin-left:94%;opacity:0.7" width="25" height="25" viewBox="0 0 64 64">
+		<circle cx="32" cy="32" r="29" fill="none" stroke="white" stroke-width="3"/>
+		<polygon points="25,18 50,32 25,46" fill="white"/>
+	</svg>`;
+	var overlayHtml = hideOverlay ?
+		`<div class="card-img-overlay d-flex align-items-center justify-content-center">
+			${playSvgLarge}
+		</div>` :
 		`<div class="card-img-overlay d-flex flex-column justify-content-end">
 			<div class="gallery-overlay rounded">
 				<div class="overlay-title">${post.title}</div>
 				<div class="overlay-date">${postDate}</div>
-				<div class="bot-video-play"></div>
+				${playSvgSmall}
 			</div>
 		</div>`;
 
